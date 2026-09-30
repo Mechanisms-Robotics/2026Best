@@ -1,0 +1,11 @@
+# VEX extension build output
+build/
+
+# Python caches
+__pycache__/
+*.pyc
+
+# OS / editor clutter
+.DS_Store
+Thumbs.db
+*.swp
