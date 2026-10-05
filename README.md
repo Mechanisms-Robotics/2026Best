@@ -22,6 +22,7 @@ Mechanisms Robotics robot code for the 2026 BEST season. The robot uses a VEX V5
 ```
 src/main.py                       <- all robot code lives here
 .vscode/vex_project_settings.json <- tells the VEX extension this is a V5 Python project
+docs/fiducial-map.md              <- where each fiducial is on the field, and its ID
 ```
 
 Everything has to be in `src/main.py`. VEX Python downloads one file, so you can't split code across files the way you do in WPILib. Classes and functions inside the one file work fine.
@@ -33,6 +34,7 @@ Everything has to be in `src/main.py`. VEX Python downloads one file, so you can
 - **It's MicroPython.** The brain runs a small version of Python, so most of the standard library isn't available and you can't `pip install` anything.
 - **No command-based framework.** The code is plain functions. `driver_control()` runs a loop for the whole match. There is no autonomous period in this year's game: the driver presses a button and the robot runs a routine on its own (see the "Autonomous building blocks" section of `src/main.py`).
 - **Docs:** [VEX V5 Python API](https://api.vex.com/v5/home/python/index.html)
+- **Field:** [`docs/fiducial-map.md`](docs/fiducial-map.md) shows where each fiducial (AprilTag) is in the Dining Room and its ID number.
 
 ## Autocomplete not working?
 
