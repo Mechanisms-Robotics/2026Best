@@ -36,4 +36,4 @@ Everything has to be in `src/main.py`. VEX Python downloads one file, so you can
 
 ## Autocomplete not working?
 
-The VEX extension adds `python.analysis.stubPath` to `.vscode/settings.json` on each machine, and that path is specific to your computer. **Don't commit that line.** If autocomplete for `vex` stops working, reopen the folder so the extension can set the path again.
+The VEX extension adds `python.analysis.stubPath` to `.vscode/settings.json` on each machine, and that path is specific to your computer. Run `tools/check.sh` once after cloning: it sets Git up to leave that line out of commits, so you can commit the file like any other. If autocomplete for `vex` stops working, reopen the folder so the extension can set the path again.
