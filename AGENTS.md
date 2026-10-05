@@ -90,7 +90,7 @@ The 2026 game is *Byte to Bite*. Matches are three minutes. There is no autonomo
 
 - A robot may only enter the Dining Room under autonomous control while the driver is hands-free (the controller is not in the driver's hands).
 - Every scoring task inside the Dining Room must be done autonomously: navigate to an open table and place a completed meal on it.
-- Fiducials (AprilTags) are on the Dining Room walls and on the table tops to help the robot navigate. Their sizes, positions and ID numbers are in the *Byte to Bite Field Drawings*.
+- Fiducials (AprilTags) are on the Dining Room walls and on the table tops to help the robot navigate. Their sizes, positions and ID numbers are in the *Byte to Bite Field Drawings*, and `docs/fiducial-map.md` summarizes them: IDs 0-8 are on the nine tables, 9-20 run clockwise around the walls. That file marks which numbers were read from the drawings and which were worked out; keep that distinction when quoting it.
 - A team may abandon an autonomous run at any time, and the driver may then drive the robot out by hand. The rules do not require the robot to return on its own.
 - The robot may not run any autonomous or time-delay program while the Spotter is interacting with it in the Robot Start Area.
 

@@ -35,6 +35,7 @@ ALL_MOTORS = [left_motor, right_motor, motor_3, motor_4]
 
 # AI Vision Sensor (Smart Port). It can see the fiducials (AprilTags) on the
 # Dining Room walls and tables. Byte to Bite uses the "Circle21h7" tag family.
+# docs/fiducial-map.md shows which ID number is on which wall or table.
 # CHANGE ME: the port number.
 ai_vision = AiVision(Ports.PORT5, AiVision.ALL_TAGS)
 ai_vision.set_tag_family(AiVision.TAG_CIRCLE21H7)
