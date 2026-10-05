@@ -29,4 +29,3 @@ Open questions and unverified guesses, written 2026-10-03. Nothing in `src/main.
 - [ ] **Gemini CLI is untested.** Codex read `AGENTS.md` correctly; the Gemini run failed because its API account was out of credits. Ask it "what commit convention does this repo use?" once it works.
 - [ ] **`tools/check.sh` on Windows.** It needs `bash`, `python`, `curl`, `unzip` and `npx`. It has only been run on Linux and in GitHub Actions; try it in Git Bash on a student laptop.
 - [ ] **PR check is not required.** The "Check" workflow runs on every PR but a PR can merge while it is failing. Making it required means editing the organization ruleset "Protect main, master, develop".
-- [ ] **Leftover branch.** `chore/agent-setup` is merged but still exists on GitHub and can be deleted.
