@@ -4,29 +4,36 @@ This file provides guidance to AI coding agents (Claude Code, Codex, Gemini CLI,
 
 ## What this is
 
-Baseline robot code for a high school team's (Mechanisms Robotics) 2026 BEST Robotics season. The robot runs on a VEX V5 brain and is programmed in VEX Python. The students who maintain this are mostly coming from FRC Java/WPILib, so keep code plain and heavily commented in the style already in `src/main.py`: explain *why* in terms a new programmer can follow, and say which values they are expected to change (ports, reversed flags, speeds).
+Baseline robot code for a high school team's (Mechanisms Robotics) 2026 BEST Robotics season. The robot runs on a VEX V5 brain and is programmed in VEX Python. The students who maintain this are mostly coming from FRC Java/WPILib, so keep code plain and heavily commented in the style already in `src/main.py` and `examples/example.py`: explain *why* in terms a new programmer can follow, and say which values they are expected to change (ports, reversed flags, speeds).
 
 ## Build, download, test
 
 There is no command-line build or test suite. Downloading goes through the VEX VS Code extension (`vexrobotics.vexcode`):
 
 - **Download to the brain:** connect the brain (or a paired controller) over USB and click **Download** in the VEX toolbar. The program lands in slot 1 (set in `.vscode/vex_project_settings.json`).
-- **Check code from a terminal:** `tools/check.sh`. Run it after every change to `src/main.py` and fix what it reports before committing. It confirms `src/main.py` is the only Python file in `src/`, checks syntax, and runs Pyright against the VEX V5 Python SDK, so it catches misspelled `vex` names and wrong arguments. The first run downloads the SDK from VEX into `build/` (gitignored); it needs `bash`, `python`, `curl`, `unzip`, and `npx` (Git Bash on Windows works). GitHub runs the same script on every PR (`.github/workflows/check.yml`).
+- **Check code from a terminal:** `tools/check.sh`. Run it after every change to `src/main.py` or `examples/example.py` and fix what it reports before committing. It confirms `src/main.py` is the only Python file in `src/`, then checks the syntax of both files and runs Pyright on them against the VEX V5 Python SDK, so it catches misspelled `vex` names and wrong arguments. The first run downloads the SDK from VEX into `build/` (gitignored); it needs `bash`, `python`, `curl`, `unzip`, and `npx` (Git Bash on Windows works). GitHub runs the same script on every PR (`.github/workflows/check.yml`).
 - **In VS Code:** Pylance in `basic` type-checking mode shows the same errors as red squiggles once the extension has downloaded the SDK.
 - **SDK version:** `tools/check.sh`, `tools/pyrightconfig.json` and the `python.analysis.extraPaths` entry in `.vscode/settings.json` name the same SDK version as `sdkVersion` in `.vscode/vex_project_settings.json`. Change all four together.
 
-The `vex` module does not exist off the brain, so `src/main.py` cannot be run or imported locally. A passing check means the code is well-formed, not that the robot behaves correctly. Say so when handing back changes rather than claiming they were tested.
+The `vex` module does not exist off the brain, so neither file can be run or imported locally. A passing check means the code is well-formed, not that the robot behaves correctly. Say so when handing back changes rather than claiming they were tested.
 
 ## Constraints that shape the code
 
-- **Single file.** The VEX extension downloads only `src/main.py` (`project.python.main`). Do not split code into modules or add imports of local files; organize with functions and classes inside the one file.
+- **Single file.** The VEX extension downloads only `src/main.py` (`project.python.main`). Do not split code into modules or add imports of local files; organize with functions and classes inside the one file. `examples/example.py` is never downloaded: code is copied from it into `src/main.py`, not imported.
 - **MicroPython on the brain.** Most of the standard library is missing and nothing can be `pip install`ed. Stick to `from vex import *` and language built-ins.
 - **Every loop must yield.** Long-running loops need a `wait(20, MSEC)` (or similar) so the brain can service other tasks.
 - **`python.analysis.stubPath` stays out of commits.** The VEX extension writes this machine-specific path into `.vscode/settings.json` on each computer, and rewrites it every time the project opens. A Git clean filter (`.gitattributes`, `tools/clean-settings.awk`) strips the line before Git sees the file, so the file can be committed normally. The filter is a per-clone Git setting that `tools/check.sh` switches on, and the same script fails if the line is ever staged or committed. Do not add the line by hand or remove the filter. The extension also rewrites `.vscode/extensions.json` and `.vscode/vex_project_settings.json` without a newline at the end; they are committed that way on purpose so they do not show as modified.
 
-## Structure of `src/main.py`
+## Structure of the code
 
-The file is a teaching framework, not a finished robot. Its job is to give students working examples of each building block so they can design their own solution. Do not turn it into a solution to the game unless a person asks for one, and keep the `CHANGE ME` and `EXAMPLE` markers honest: remove one only when the value has been confirmed on the real robot.
+There are two Python files:
+
+- **`src/main.py`** is the robot program, the only file downloaded to the brain. It starts out clean: `brain`, `controller`, empty Devices, Settings and Helpers sections, a `driver_control()` loop that does nothing, the empty `autonomous()`, and the `Competition` line. It declares no motors or sensors and moves nothing. Students fill it in as the robot is designed. Do not copy the placeholder devices from the example into it; add a device only when a person has said what is plugged in and where.
+- **`examples/example.py`** is a teaching framework, not a finished robot. Its job is to give students working examples of each building block so they can design their own solution. Do not turn it into a solution to the game unless a person asks for one, and keep the `CHANGE ME` and `EXAMPLE` markers honest: remove one only when the value has been confirmed on the real robot.
+
+Code moves from the example into `src/main.py` by copying. As `src/main.py` grows, keep it in the same section order as the example. `set_power`, `stop_all`, `check_cancel`, `auto_wait` and `run_autonomous` exist only in the example until someone copies them over; copy them rather than writing a second version. The rules below about `set_power` and cancellable routines apply to `src/main.py` as soon as it has a motor.
+
+`examples/example.py` is laid out like this:
 
 1. **Devices** — module-level globals: `brain`, `controller`, four `Motor55` motors, the `AiVision` sensor, the IR sensor, an example servo, microswitch and potentiometer, and the `ALL_MOTORS` list that `stop_all()` uses. New devices are declared here and new motors added to `ALL_MOTORS`.
 2. **Settings** — named constants (deadband, powers, camera numbers) that students tune on the robot. New timings and powers go here, not inline.
@@ -40,7 +47,7 @@ The file is a teaching framework, not a finished robot. Its job is to give stude
 
 Open questions and unverified guesses about the hardware and code are tracked in `TODO.md`. Check it before relying on a `CHANGE ME` value, and update it when one is settled.
 
-**The robot is not built yet and the design is undecided.** Every port, every reversed flag, and the job of each motor in `src/main.py` is a placeholder marked `CHANGE ME`. Ask the person you are working with what is actually plugged in before adding or changing a device, and never present a guessed port as real.
+**The robot is not built yet and the design is undecided.** Every port, every reversed flag, and the job of each motor in `examples/example.py` is a placeholder marked `CHANGE ME`. `src/main.py` declares no devices yet. Ask the person you are working with what is actually plugged in before adding or changing a device, and never present a guessed port as real.
 
 **Kit parts only.** BEST Robotics rules limit the robot to the parts supplied in the team's kit. Never suggest buying or adding hardware and never write code for a device unless a person has confirmed it came in the kit. If a problem would normally be solved with a sensor the team does not have, solve it in software with what is there or say it cannot be done.
 
@@ -50,7 +57,7 @@ What the team has confirmed is in the kit:
 - **One AI Vision Sensor** (Smart Port, `AiVision`). It detects the field's fiducials, which are AprilTags from the Circle21h7 family (`AiVision.TAG_CIRCLE21H7`).
 - **One BEST IR Sensor Kit**: two small boards, each with three pins (one with female pins, one with male). How it wires to the brain and what it reports have not been worked out. The code reads it as `AnalogIn` on a 3-wire port as a first guess so students can watch the value on the brain screen.
 
-- **Servos, microswitches and potentiometers.** All use the 3-wire ports (A-H): `Servo` (`set_position`, -50 to 50 degrees; the BEST servos may not reach the full range), `Limit` (`pressing()`), and `Potentiometer` (`angle(DEGREES)`, about 0 to 250). How many of each the team has is not recorded; ask before assuming more than one. The servo, switch and potentiometer in `src/main.py` are examples on placeholder ports, not real mechanisms.
+- **Servos, microswitches and potentiometers.** All use the 3-wire ports (A-H): `Servo` (`set_position`, -50 to 50 degrees; the BEST servos may not reach the full range), `Limit` (`pressing()`), and `Potentiometer` (`angle(DEGREES)`, about 0 to 250). How many of each the team has is not recorded; ask before assuming more than one. The servo, switch and potentiometer in `examples/example.py` are examples on placeholder ports, not real mechanisms.
 
 What this means for the code:
 
@@ -60,7 +67,9 @@ What this means for the code:
 - **Only four motors.** Any design has to split them between driving and mechanisms; do not write code that assumes more.
 - **No CAN devices.** The V5 brain has no CAN bus, so parts such as a CTRE CANcoder cannot be used even if available.
 
-Keep these tables in step with the Devices section and the controls comment in `src/main.py`. When a change adds, removes, or moves a device or a control, update the table in the same commit. Everything below is a placeholder until the robot is wired.
+These tables describe `examples/example.py`. Keep them in step with its Devices section and controls comment: when a change adds, removes, or moves a device or a control, update the table in the same commit. Everything below is a placeholder until the robot is wired.
+
+`src/main.py` has no devices or controls yet. When the first real one is added, start a second pair of tables here for `src/main.py` and keep them up to date the same way.
 
 | Port | Device (type) | Name in code | Reversed? | Notes |
 | ---- | ------------- | ------------ | --------- | ----- |

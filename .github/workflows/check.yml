@@ -19,5 +19,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Check src/main.py
+      - name: Check src/main.py and examples/example.py
         run: tools/check.sh

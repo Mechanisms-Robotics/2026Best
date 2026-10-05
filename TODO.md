@@ -1,6 +1,6 @@
 # TODO
 
-Open questions and unverified guesses, written 2026-10-03. Nothing in `src/main.py` has run on a robot yet. Delete an item once it is settled, and move anything agents need to know into `AGENTS.md`.
+Open questions and unverified guesses, written 2026-10-03. Nothing in `src/main.py` or `examples/example.py` has run on a robot yet. The functions, constants and ports named below are in `examples/example.py`; `src/main.py` has no devices yet. Delete an item once it is settled, and move anything agents need to know into `AGENTS.md`.
 
 ## Confirm on the robot
 
@@ -16,7 +16,7 @@ Open questions and unverified guesses, written 2026-10-03. Nothing in `src/main.
 ## Find out
 
 - [ ] **IR sensor.** How do the two boards of the BEST IR Sensor Kit wire to the brain (one port or two? which board carries the signal?), and is the output on/off or a range? The code reads it as `AnalogIn` on 3-wire port A as a first guess. Replace `read_ir()` once known.
-- [ ] **Real ports and motor roles.** Every port in the Devices section is a placeholder, and which of the two large and two small motors drive is undecided. Fill in the tables in `AGENTS.md` when wired.
+- [ ] **Real ports and motor roles.** Every port in the Devices section of `examples/example.py` is a placeholder, and which of the two large and two small motors drive is undecided. Fill in the tables in `AGENTS.md` when wired.
 - [ ] **How many servos, microswitches and potentiometers** are in the kit. Record the counts in `AGENTS.md`.
 - [ ] **Check the fiducial map on a real field.** `docs/fiducial-map.md` lists every ID and position from the Field Drawings (Aug 23 2026 revision). The x/y positions, the long-wall spacing and the heights were worked out from the drawings rather than read off them. Measure a built field, and find out how far away the camera can read a tag.
 - [ ] **Does the robot have to return on its own?** The rules say the driver may drive the robot out of the Dining Room by hand after a run or after abandoning one. Confirm with the hub whether a self-return is required or just the team's plan.
