@@ -36,11 +36,11 @@ Code moves from the example into `src/main.py` by copying. As `src/main.py` grow
 `examples/example.py` is laid out like this:
 
 1. **Devices** — module-level globals: `brain`, `controller`, four `Motor55` motors, the `AiVision` sensor, the IR sensor, an example servo, microswitch and potentiometer, and the `ALL_MOTORS` list that `stop_all()` uses. New devices are declared here and new motors added to `ALL_MOTORS`.
-2. **Settings** — named constants (deadband, powers, camera numbers) that students tune on the robot. New timings and powers go here, not inline.
-3. **Motor helpers** — `set_power(motor, percent)`, `drive(forward, turn)`, `stop_all()`. All motor movement goes through `set_power`.
+2. **Settings** — named constants (deadband, `TANK_CONTROLS`, powers, camera numbers) that students tune on the robot. New timings and powers go here, not inline.
+3. **Motor helpers** — `set_power(motor, percent)`, `drive(forward, turn)`, `tank_drive(left, right)`, `stop_all()`. All motor movement goes through `set_power`.
 4. **Sensor helpers** — `read_ir()`, `find_tag(id)`, `visible_tag_ids()`, and `show_sensors()`, which prints live readings on the brain screen so students can see what the sensors report.
 5. **Autonomous building blocks** — `auto_wait`, `auto_drive`, `auto_turn_to_tag`, `auto_run_until_switch`, `auto_move_to_angle`, an `example_routine`, and `run_autonomous(routine)`, which runs a routine and always stops every motor afterwards.
-6. **`driver_control()`** — an infinite loop: arcade drive, buttons for the two extra motors and the example servo, a button that starts the autonomous routine, and the sensor display.
+6. **`driver_control()`** — an infinite loop: arcade or tank driving (chosen by `TANK_CONTROLS`), buttons for the two extra motors and the example servo, a button that starts the autonomous routine, and the sensor display.
 7. **`autonomous()` and `competition = Competition(driver_control, autonomous)`** — `autonomous()` is intentionally empty (see "Autonomous in this game"). The `Competition` line must stay the last statement; with no field control attached, running the program goes straight to `driver_control()`.
 
 ## Robot hardware
@@ -85,8 +85,9 @@ These tables describe `examples/example.py`. Keep them in step with its Devices 
 
 | Controller input | What it does |
 | ---------------- | ------------ |
-| Axis 3 (left stick up/down) | Drive forward/back |
-| Axis 1 (right stick left/right) | Turn |
+| Axis 3 (left stick up/down) | Arcade (`TANK_CONTROLS = False`, the default): drive forward/back. Tank: left wheels |
+| Axis 1 (right stick left/right) | Arcade: turn. Tank: unused |
+| Axis 2 (right stick up/down) | Tank (`TANK_CONTROLS = True`): right wheels. Arcade: unused |
 | L1 / L2 | `motor_3` forward / reverse |
 | R1 / R2 | `motor_4` forward / reverse |
 | X / Y | `example_servo` to position 1 / position 2 |

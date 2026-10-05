@@ -71,6 +71,14 @@ example_pot = Potentiometer(brain.three_wire_port.d)
 # robot doesn't creep when the sticks are centered.
 DEADBAND = 5
 
+# How the sticks drive the robot. Both work on the same robot, so let the
+# drivers try each one and keep whichever they like better.
+#   False = arcade: left stick up/down is forward/back, right stick
+#           left/right is turn.
+#   True  = tank:   left stick up/down runs the left wheels, right stick
+#           up/down runs the right wheels.
+TANK_CONTROLS = False
+
 # Power (in percent) for the two extra motors when their buttons are held.
 MOTOR_3_POWER = 50
 MOTOR_4_POWER = 50
@@ -118,6 +126,12 @@ def drive(forward, turn):
     # Arcade drive: forward and turn are both -100 to 100.
     set_power(left_motor, forward + turn)
     set_power(right_motor, forward - turn)
+
+
+def tank_drive(left, right):
+    # Tank drive: sets each side of the robot by itself, -100 to 100.
+    set_power(left_motor, left)
+    set_power(right_motor, right)
 
 
 def stop_all():
@@ -323,8 +337,13 @@ def run_autonomous(routine):
 #
 # CHANGE ME: every control here is a starting guess. Keep the table of controls
 # in AGENTS.md up to date when you change them.
+# Driving, when TANK_CONTROLS is False (arcade):
 #   Left stick up/down (axis 3)     drive forward/back
 #   Right stick left/right (axis 1) turn
+# Driving, when TANK_CONTROLS is True (tank):
+#   Left stick up/down (axis 3)     left wheels
+#   Right stick up/down (axis 2)    right wheels
+# Everything else:
 #   L1 / L2                         motor_3 forward / reverse
 #   R1 / R2                         motor_4 forward / reverse
 #   X / Y                           example servo to position 1 / position 2
@@ -338,10 +357,15 @@ def driver_control():
 
     loops = 0
     while True:
-        # --- Driving ---
-        forward = apply_deadband(controller.axis3.position())
-        turn = apply_deadband(controller.axis1.position())
-        drive(forward, turn)
+        # --- Driving: TANK_CONTROLS in the settings picks which one runs ---
+        if TANK_CONTROLS:
+            left = apply_deadband(controller.axis3.position())
+            right = apply_deadband(controller.axis2.position())
+            tank_drive(left, right)
+        else:
+            forward = apply_deadband(controller.axis3.position())
+            turn = apply_deadband(controller.axis1.position())
+            drive(forward, turn)
 
         # --- Extra motors: run while a button is held, stop when let go ---
         if controller.buttonL1.pressing():
