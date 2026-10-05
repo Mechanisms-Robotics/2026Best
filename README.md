@@ -31,7 +31,7 @@ Everything has to be in `src/main.py`. VEX Python downloads one file, so you can
 - **Indentation matters.** Python uses indentation instead of `{ }` to mark blocks.
 - **No compiler.** Type mistakes only show up when the code runs, so watch for red squiggles in VS Code before you download.
 - **It's MicroPython.** The brain runs a small version of Python, so most of the standard library isn't available and you can't `pip install` anything.
-- **No command-based framework.** The code is plain functions: `autonomous()` runs during the autonomous period, and `driver_control()` runs a loop during driver control.
+- **No command-based framework.** The code is plain functions. `driver_control()` runs a loop for the whole match. There is no autonomous period in this year's game: the driver presses a button and the robot runs a routine on its own (see the "Autonomous building blocks" section of `src/main.py`).
 - **Docs:** [VEX V5 Python API](https://api.vex.com/v5/home/python/index.html)
 
 ## Autocomplete not working?
