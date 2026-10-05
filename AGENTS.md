@@ -13,7 +13,7 @@ There is no command-line build or test suite. Downloading goes through the VEX V
 - **Download to the brain:** connect the brain (or a paired controller) over USB and click **Download** in the VEX toolbar. The program lands in slot 1 (set in `.vscode/vex_project_settings.json`).
 - **Check code from a terminal:** `tools/check.sh`. Run it after every change to `src/main.py` and fix what it reports before committing. It confirms `src/main.py` is the only Python file in `src/`, checks syntax, and runs Pyright against the VEX V5 Python SDK, so it catches misspelled `vex` names and wrong arguments. The first run downloads the SDK from VEX into `build/` (gitignored); it needs `bash`, `python`, `curl`, `unzip`, and `npx` (Git Bash on Windows works). GitHub runs the same script on every PR (`.github/workflows/check.yml`).
 - **In VS Code:** Pylance in `basic` type-checking mode shows the same errors as red squiggles once the extension has downloaded the SDK.
-- **SDK version:** `tools/check.sh` and `tools/pyrightconfig.json` name the same SDK version as `sdkVersion` in `.vscode/vex_project_settings.json`. Change all three together.
+- **SDK version:** `tools/check.sh`, `tools/pyrightconfig.json` and the `python.analysis.extraPaths` entry in `.vscode/settings.json` name the same SDK version as `sdkVersion` in `.vscode/vex_project_settings.json`. Change all four together.
 
 The `vex` module does not exist off the brain, so `src/main.py` cannot be run or imported locally. A passing check means the code is well-formed, not that the robot behaves correctly. Say so when handing back changes rather than claiming they were tested.
 
@@ -22,7 +22,7 @@ The `vex` module does not exist off the brain, so `src/main.py` cannot be run or
 - **Single file.** The VEX extension downloads only `src/main.py` (`project.python.main`). Do not split code into modules or add imports of local files; organize with functions and classes inside the one file.
 - **MicroPython on the brain.** Most of the standard library is missing and nothing can be `pip install`ed. Stick to `from vex import *` and language built-ins.
 - **Every loop must yield.** Long-running loops need a `wait(20, MSEC)` (or similar) so the brain can service other tasks.
-- **Don't commit `python.analysis.stubPath`.** The VEX extension writes this machine-specific path into `.vscode/settings.json` on each computer. Leave it out of commits.
+- **`python.analysis.stubPath` stays out of commits.** The VEX extension writes this machine-specific path into `.vscode/settings.json` on each computer, and rewrites it every time the project opens. A Git clean filter (`.gitattributes`, `tools/clean-settings.awk`) strips the line before Git sees the file, so the file can be committed normally. The filter is a per-clone Git setting that `tools/check.sh` switches on, and the same script fails if the line is ever staged or committed. Do not add the line by hand or remove the filter. The extension also rewrites `.vscode/extensions.json` and `.vscode/vex_project_settings.json` without a newline at the end; they are committed that way on purpose so they do not show as modified.
 
 ## Structure of `src/main.py`
 

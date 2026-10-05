@@ -1,4 +1,7 @@
 {
 	"python.analysis.diagnosticMode": "workspace",
+	"python.analysis.extraPaths": [
+		"build/vex-sdk/V5_1_0_1_25/vexv5/stubs"
+	],
 	"python.analysis.typeCheckingMode": "basic"
 }

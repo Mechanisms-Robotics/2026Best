@@ -15,6 +15,23 @@ SDK_URL="https://content.vexrobotics.com/vexos/public/V5/vscode/sdk/python/${SDK
 SDK_DIR="build/vex-sdk"
 PYRIGHT_VERSION="1.1.414"
 
+echo "== No machine-specific paths in .vscode/settings.json"
+# Switch on the filter named in .gitattributes. It is a setting in your own
+# copy of the repo, so each computer has to do this once; doing it here means
+# nobody has to remember. On a branch without the script it passes the file
+# through unchanged.
+git config filter.vscode-settings.clean \
+    'if [ -f tools/clean-settings.awk ]; then awk -f tools/clean-settings.awk; else cat; fi'
+# The filter cannot help a computer that has never run this script, so also
+# look at what is actually staged or committed.
+if git grep --cached -q 'python.analysis.stubPath' -- .vscode/settings.json; then
+    echo "The committed .vscode/settings.json has the VEX extension's stubPath line."
+    echo "That path only exists on one computer. To fix it, run:"
+    echo "    git add --renormalize .vscode/settings.json"
+    echo "and commit the result."
+    exit 1
+fi
+
 echo "== Only src/main.py gets downloaded to the brain"
 extra=$(find src -name '*.py' ! -path 'src/main.py')
 if [ -n "$extra" ]; then
