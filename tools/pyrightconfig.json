@@ -1,5 +1,5 @@
 {
-	"include": ["../src"],
+	"include": ["../src", "../examples"],
 	"extraPaths": ["../build/vex-sdk/V5_1_0_1_25/vexv5/stubs"],
 	"typeCheckingMode": "basic"
 }
