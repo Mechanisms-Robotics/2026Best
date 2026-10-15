@@ -68,13 +68,13 @@ SERVO_MAX_DEGREES = 50
 # Functions that the rest of the code uses go here. These two are copied from
 # examples/example.py.
 # ---------------------------------------------------------------------------- #
-def apply_deadband(value):
+def apply_deadband(value: float):
     if abs(value) < DEADBAND:
         return 0
     return value
 
 
-def set_power(motor, percent):
+def set_power(motor: Motor55, percent: float):
     # Runs one motor at a power from -100 (full reverse) to 100 (full forward).
     #
     # A Motor55 is told how many volts to send, not a percent, so this converts
@@ -97,7 +97,7 @@ def set_power(motor, percent):
 #   Left stick up/down (axis 3)      run left_motor, up to TEST_MAX_POWER
 #   Right stick left/right (axis 1)  turn test_servo, up to SERVO_MAX_DEGREES
 # ---------------------------------------------------------------------------- #
-def show_test_numbers(stick, percent, servo_degrees):
+def show_test_numbers(stick: float, percent: float, servo_degrees: float):
     # Prints what the program is doing on the brain screen, so you can tell a
     # wiring problem from a code problem.
     #   MC55 found  False means the brain can't see the MC55 on its port
