@@ -1,6 +1,6 @@
 from vex import *
 import math
-
+DEADBAND = 5
 # ---------------------------------------------------------------------------- #
 # Devices
 #
@@ -13,12 +13,15 @@ controller = Controller()
 controller_1 = Controller(PRIMARY)
 LeftMotor = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
 RightMotor = Motor(Ports.PORT2, GearSetting.RATIO_18_1, True)
-
+def deadband(value, threshold=DEADBAND):
+    if abs(value) < threshold:
+        return 0
+    return value
 def driver_control():
 
     while True:
-        left_speed = controller_1.axis3.position()
-        right_speed = controller_1.axis2.position()
+        left_speed = deadband(controller_1.axis3.position())
+        right_speed = deadband(controller_1.axis2.position())
         
         LeftMotor.spin(FORWARD, left_speed, PERCENT)
         RightMotor.spin(FORWARD, right_speed, PERCENT)
