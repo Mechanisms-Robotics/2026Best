@@ -19,14 +19,11 @@ def driver_control():
     while True:
         left_speed = controller_1.axis3.position()
         right_speed = controller_1.axis2.position()
+        
+        LeftMotor.spin(FORWARD, left_speed, PERCENT)
+        RightMotor.spin(FORWARD, right_speed, PERCENT)
 
-        LeftMotor.set_velocity(left_speed, PERCENT)
-        RightMotor.set_velocity(right_speed, PERCENT)
-
-        LeftMotor.spin(FORWARD)
-        RightMotor.spin(FORWARD)
-
-        wait(20, MSEC)
+        #wait(20, MSEC)
     # global myVariable
     # while True:
     #     LeftMotor.set_velocity(controller_1.axis3.position(), PERCENT)
