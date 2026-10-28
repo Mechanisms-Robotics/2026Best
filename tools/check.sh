@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Checks src/main.py without a robot. Run from anywhere: tools/check.sh
+# Checks src/main.py and examples/example.py without a robot. Run from anywhere: tools/check.sh
 #
 # This is the same check GitHub runs on every pull request. It catches syntax
 # errors, misspelled vex names, and wrong arguments. It cannot tell you whether
@@ -41,7 +41,7 @@ if [ -n "$extra" ]; then
 fi
 
 echo "== Syntax"
-python -m py_compile src/main.py
+python -m py_compile src/main.py examples/example.py
 
 echo "== Types (Pyright with the VEX V5 Python SDK)"
 # The VEX SDK is downloaded from VEX rather than committed to this repo.
