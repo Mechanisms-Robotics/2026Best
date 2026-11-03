@@ -29,9 +29,11 @@ controller = Controller()
 # If one side drives backwards, flip its True/False.
 left_motor = Motor55(Ports.PORT1, False)
 right_motor = Motor55(Ports.PORT2, True)
+fork_motor = Motor55(Ports.PORT3, False)
 
 # Deadband helps prevent the motors from moving when the controller is near its center position.
 DEADBAND = 5
+FORKLIFT_POWER = 10
 
 # Runs one motor at a power from -100 (full reverse) to 100 (full forward).
 #
@@ -63,8 +65,14 @@ def driver_control():
         left = apply_deadband(controller.axis3.position())
         right = apply_deadband(controller.axis2.position())
         tank_drive(left, right)
-        wait(20, MSEC)
 
+        # move forklift up and down
+        if controller.buttonR1.pressing():
+            set_power(fork_motor, FORKLIFT_POWER)
+        elif controller.buttonR2.pressing():
+            set_power(fork_motor, -FORKLIFT_POWER)
+        else:
+            set_power(fork_motor, 0)
 
 def autonomous():
     return
