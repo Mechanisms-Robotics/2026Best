@@ -1,6 +1,6 @@
 # Fiducial map for the Dining Room
 
-Which fiducial (AprilTag) is where, so you can decide which tags your autonomous routine should look for. The ID numbers here are the same numbers `find_tag(id)` and `visible_tag_ids()` use in `src/main.py`.
+Which fiducial (AprilTag) is where, so you can decide which tags your autonomous routine should look for. The ID numbers here are the same numbers `find_tag(id)` and `visible_tag_ids()` use in `examples/example.py`.
 
 **Source:** *Byte to Bite Field Drawings*, document GAMFLDR01, revision dated August 23 2026: the fiducial map on page 7, the table layout on page 30, and the wall and table drawings on pages 69-83 and 156-158. If BEST publishes a newer revision, check this page against it. The official drawings decide any disagreement.
 

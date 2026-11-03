@@ -4,63 +4,112 @@ This file provides guidance to AI coding agents (Claude Code, Codex, Gemini CLI,
 
 ## What this is
 
-Baseline robot code for a high school team's (Mechanisms Robotics) 2026 BEST Robotics season. The robot runs on a VEX V5 brain and is programmed in VEX Python. The students who maintain this are mostly coming from FRC Java/WPILib, so keep code plain and heavily commented in the style already in `src/main.py`: explain *why* in terms a new programmer can follow, and say which values they are expected to change (ports, reversed flags, speeds).
+Baseline robot code for a high school team's (Mechanisms Robotics) 2026 BEST Robotics season. The robot runs on a VEX V5 brain and is programmed in VEX Python. The students who maintain this are mostly coming from FRC Java/WPILib, so keep code plain and heavily commented in the style already in `src/main.py` and `examples/example.py`: explain *why* in terms a new programmer can follow, and say which values they are expected to change (ports, reversed flags, speeds).
 
 ## Build, download, test
 
-There is no command-line build or test suite. Downloading goes through the VEX VS Code extension (`vexrobotics.vexcode`):
+There is no build step or test suite. Downloading normally goes through the VEX VS Code extension (`vexrobotics.vexcode`); an agent can also download from a terminal with `vexcom` (see "Downloading from a terminal" below):
 
 - **Download to the brain:** connect the brain (or a paired controller) over USB and click **Download** in the VEX toolbar. The program lands in slot 1 (set in `.vscode/vex_project_settings.json`).
-- **Check code from a terminal:** `tools/check.sh`. Run it after every change to `src/main.py` and fix what it reports before committing. It confirms `src/main.py` is the only Python file in `src/`, checks syntax, and runs Pyright against the VEX V5 Python SDK, so it catches misspelled `vex` names and wrong arguments. The first run downloads the SDK from VEX into `build/` (gitignored); it needs `bash`, `python`, `curl`, `unzip`, and `npx` (Git Bash on Windows works). GitHub runs the same script on every PR (`.github/workflows/check.yml`).
+- **Check code from a terminal:** `tools/check.sh`. Run it after every change to `src/main.py` or `examples/example.py` and fix what it reports before committing. It confirms `src/main.py` is the only Python file in `src/`, then checks the syntax of both files and runs Pyright on them against the VEX V5 Python SDK, so it catches misspelled `vex` names and wrong arguments. The first run downloads the SDK from VEX into `build/` (gitignored); it needs `bash`, `python`, `curl`, `unzip`, and `npx` (Git Bash on Windows works). GitHub runs the same script on every PR (`.github/workflows/check.yml`).
 - **In VS Code:** Pylance in `basic` type-checking mode shows the same errors as red squiggles once the extension has downloaded the SDK.
 - **SDK version:** `tools/check.sh`, `tools/pyrightconfig.json` and the `python.analysis.extraPaths` entry in `.vscode/settings.json` name the same SDK version as `sdkVersion` in `.vscode/vex_project_settings.json`. Change all four together.
 
-The `vex` module does not exist off the brain, so `src/main.py` cannot be run or imported locally. A passing check means the code is well-formed, not that the robot behaves correctly. Say so when handing back changes rather than claiming they were tested.
+The `vex` module does not exist off the brain, so neither file can be run or imported locally. A passing check means the code is well-formed, not that the robot behaves correctly. Say so when handing back changes rather than claiming they were tested.
+
+## Downloading from a terminal (`vexcom`)
+
+The VEX extension installs a command-line tool, `vexcom`, and uses it for its own Download button. An agent can call it directly, so nobody has to switch to VS Code. This was worked out on Linux on 2026-10-05 with `vexcom` 1.0.2 and extension 0.8; the Windows and macOS paths below are not confirmed.
+
+**Only write to the brain when a person asks.** Never pass `--run` or `--load`: they start the program, which can move the robot with nobody ready for it. Download without them and let the person start the program from the brain or the controller.
+
+- **Where it is:** `~/.config/Code/User/globalStorage/vexrobotics.vexcode/tools/vexcom/<version>/<platform>/vexcom`, with `<platform>` one of `linux-x64`, `linux-arm64`, `linux-arm32`, `osx`, `win32`. It is not on `PATH`. Find it rather than hard-coding the version.
+- **Serial port:** a brain on USB shows up as `/dev/ttyACM0` and `/dev/ttyACM1` on Linux; `/dev/ttyACM0` is the one that answers. The port argument is optional and `vexcom` finds it by itself.
+- **Look before writing (read-only):**
+  - `vexcom --json` prints the brain's state: `programs` (what is in each slot), `vms` (whether `python_vm.bin` is there), battery, `radio_linked`, and `deviceCount`.
+  - `vexcom --directory` lists the files on the brain.
+  - `vexcom --read slot_1.ini` copies a slot's settings file into the current directory, which shows the stored name and description. Run it from a scratch directory, not the repo.
+- **Python VM first:** a brain that has never run a Python program has no Python VM. If `vms` in `--json` is empty, run `vexcom --python --progress` once. The extension does this automatically; the command line does not.
+- **Download:**
+
+  ```
+  vexcom --name "Motor Test" --slot 1 --write src/main.py --progress \
+    --description "$(printf '%s' 'What this program is' | base64 -w0)"
+  ```
+
+  - `--name` and `--description` are not in `vexcom --help`; they come from how the extension calls the tool. Without `--name` the program shows up on the brain as `main`.
+  - The description must be base64-encoded, as above. Plain text is not accepted.
+  - `--slot` takes 1 to 8. `--json` and the `.ini` file number the same slots from 0, so slot 1 reads back as `"slot": 0`.
+  - The command replaces whatever is in the slot without asking. Check `--json` first and tell the person what will be overwritten.
+- **Confirm it landed:** run `--json` again and check the slot's name and time.
+- **VS Code renames it.** The Download button takes the name and description from `.vscode/vex_project_settings.json`, so a later download from VS Code replaces a name given here.
+
+A finished download means the file is on the brain, not that it works. The "Test on the robot" list is still required.
 
 ## Constraints that shape the code
 
-- **Single file.** The VEX extension downloads only `src/main.py` (`project.python.main`). Do not split code into modules or add imports of local files; organize with functions and classes inside the one file.
+- **Single file.** The VEX extension downloads only `src/main.py` (`project.python.main`). Do not split code into modules or add imports of local files; organize with functions and classes inside the one file. `examples/example.py` is never downloaded: code is copied from it into `src/main.py`, not imported.
 - **MicroPython on the brain.** Most of the standard library is missing and nothing can be `pip install`ed. Stick to `from vex import *` and language built-ins.
 - **Every loop must yield.** Long-running loops need a `wait(20, MSEC)` (or similar) so the brain can service other tasks.
 - **`python.analysis.stubPath` stays out of commits.** The VEX extension writes this machine-specific path into `.vscode/settings.json` on each computer, and rewrites it every time the project opens. A Git clean filter (`.gitattributes`, `tools/clean-settings.awk`) strips the line before Git sees the file, so the file can be committed normally. The filter is a per-clone Git setting that `tools/check.sh` switches on, and the same script fails if the line is ever staged or committed. Do not add the line by hand or remove the filter. The extension also rewrites `.vscode/extensions.json` and `.vscode/vex_project_settings.json` without a newline at the end; they are committed that way on purpose so they do not show as modified.
 
-## Structure of `src/main.py`
+## Structure of the code
 
-The file is a teaching framework, not a finished robot. Its job is to give students working examples of each building block so they can design their own solution. Do not turn it into a solution to the game unless a person asks for one, and keep the `CHANGE ME` and `EXAMPLE` markers honest: remove one only when the value has been confirmed on the real robot.
+There are two Python files:
+
+- **`src/main.py`** is the robot program, the only file downloaded to the brain. It started out clean and has the same sections as the example: Devices, Settings, Helpers, `driver_control()`, the empty `autonomous()`, and the `Competition` line. For now it holds only a temporary bench test, marked `TEMPORARY BENCH TEST`: the left stick runs one motor and the right stick moves one servo (see the `src/main.py` tables under "Robot hardware"). Students fill it in as the robot is designed. Do not copy the placeholder devices from the example into it; add a device only when a person has said what is plugged in and where.
+- **`examples/example.py`** is a teaching framework, not a finished robot. Its job is to give students working examples of each building block so they can design their own solution. Do not turn it into a solution to the game unless a person asks for one, and keep the `CHANGE ME` and `EXAMPLE` markers honest: remove one only when the value has been confirmed on the real robot.
+
+Code moves from the example into `src/main.py` by copying. As `src/main.py` grows, keep it in the same section order as the example. `set_power` and `apply_deadband` have been copied over; `stop_all`, `check_cancel`, `auto_wait` and `run_autonomous` exist only in the example until someone copies them too; copy them rather than writing a second version. The rules below about `set_power` and cancellable routines apply to `src/main.py` as soon as it has a motor.
+
+`examples/example.py` is laid out like this:
 
 1. **Devices** — module-level globals: `brain`, `controller`, four `Motor55` motors, the `AiVision` sensor, the IR sensor, an example servo, microswitch and potentiometer, and the `ALL_MOTORS` list that `stop_all()` uses. New devices are declared here and new motors added to `ALL_MOTORS`.
-2. **Settings** — named constants (deadband, powers, camera numbers) that students tune on the robot. New timings and powers go here, not inline.
-3. **Motor helpers** — `set_power(motor, percent)`, `drive(forward, turn)`, `stop_all()`. All motor movement goes through `set_power`.
+2. **Settings** — named constants (deadband, `TANK_CONTROLS`, powers, camera numbers) that students tune on the robot. New timings and powers go here, not inline.
+3. **Motor helpers** — `set_power(motor, percent)`, `drive(forward, turn)`, `tank_drive(left, right)`, `stop_all()`. All motor movement goes through `set_power`.
 4. **Sensor helpers** — `read_ir()`, `find_tag(id)`, `visible_tag_ids()`, and `show_sensors()`, which prints live readings on the brain screen so students can see what the sensors report.
 5. **Autonomous building blocks** — `auto_wait`, `auto_drive`, `auto_turn_to_tag`, `auto_run_until_switch`, `auto_move_to_angle`, an `example_routine`, and `run_autonomous(routine)`, which runs a routine and always stops every motor afterwards.
-6. **`driver_control()`** — an infinite loop: arcade drive, buttons for the two extra motors and the example servo, a button that starts the autonomous routine, and the sensor display.
+6. **`driver_control()`** — an infinite loop: arcade or tank driving (chosen by `TANK_CONTROLS`), buttons for the two extra motors and the example servo, a button that starts the autonomous routine, and the sensor display.
 7. **`autonomous()` and `competition = Competition(driver_control, autonomous)`** — `autonomous()` is intentionally empty (see "Autonomous in this game"). The `Competition` line must stay the last statement; with no field control attached, running the program goes straight to `driver_control()`.
 
 ## Robot hardware
 
 Open questions and unverified guesses about the hardware and code are tracked in `TODO.md`. Check it before relying on a `CHANGE ME` value, and update it when one is settled.
 
-**The robot is not built yet and the design is undecided.** Every port, every reversed flag, and the job of each motor in `src/main.py` is a placeholder marked `CHANGE ME`. Ask the person you are working with what is actually plugged in before adding or changing a device, and never present a guessed port as real.
+**The robot is not built yet and the design is undecided.** Every port, every reversed flag, and the job of each motor in `examples/example.py` is a placeholder marked `CHANGE ME`. `src/main.py` declares one motor and one servo for a bench test, on ports a person confirmed. Ask the person you are working with what is actually plugged in before adding or changing a device, and never present a guessed port as real.
 
 **Kit parts only.** BEST Robotics rules limit the robot to the parts supplied in the team's kit. Never suggest buying or adding hardware and never write code for a device unless a person has confirmed it came in the kit. If a problem would normally be solved with a sensor the team does not have, solve it in software with what is there or say it cannot be done.
 
 What the team has confirmed is in the kit:
 
 - **Four 2-wire DC motors, two large and two small**, each driven through a VEX Motor Controller 55 (MC55). An MC55 plugs into a numbered Smart Port. Declare it with `Motor55(Ports.PORT1, reversed)`, not `Motor`.
+  - **Large motor: VEX 276-1611 (BEST Large Motor)**, part number read off the motor by the team. VEX lists free speed 43 RPM, stall torque 23.53 in-lbs, stall current 3.34 A, free current 0.32 A. The voltage for those figures was not seen directly, but is very likely 7.2 V like the small motor's.
+  - **Small motor: VEX 276-1610 (BEST Small Motor)**, confirmed by the team. VEX drawing 276-1610 Rev2 gives, at 7.2 V: free speed 90 RPM, stall torque 9.49 in-lbs, stall current 2.39 A, free current 0.21 A.
+  - Both are slow, geared motors: under one turn a second for the large one. The small motor is about twice as fast with well under half the torque.
 - **One AI Vision Sensor** (Smart Port, `AiVision`). It detects the field's fiducials, which are AprilTags from the Circle21h7 family (`AiVision.TAG_CIRCLE21H7`).
 - **One BEST IR Sensor Kit**: two small boards, each with three pins (one with female pins, one with male). How it wires to the brain and what it reports have not been worked out. The code reads it as `AnalogIn` on a 3-wire port as a first guess so students can watch the value on the brain screen.
 
-- **Servos, microswitches and potentiometers.** All use the 3-wire ports (A-H): `Servo` (`set_position`, -50 to 50 degrees; the BEST servos may not reach the full range), `Limit` (`pressing()`), and `Potentiometer` (`angle(DEGREES)`, about 0 to 250). How many of each the team has is not recorded; ask before assuming more than one. The servo, switch and potentiometer in `src/main.py` are examples on placeholder ports, not real mechanisms.
+- **Battery: 12.8 V DC, 1100 mAh, 14 Wh.** These are the figures the team read off the battery. The game rules require the batteries BEST supplies for Game Day matches.
+- **Servos, microswitches and potentiometers.** All use the 3-wire ports (A-H): `Servo` (`set_position`, -50 to 50 degrees; the BEST servos may not reach the full range), `Limit` (`pressing()`), and `Potentiometer` (`angle(DEGREES)`, about 0 to 250). How many of each the team has is not recorded; ask before assuming more than one. The servo, switch and potentiometer in `examples/example.py` are examples on placeholder ports, not real mechanisms.
+  - **The servos are Futaba S3004**, confirmed by the team: a standard positional servo. It turns to an angle and holds; it cannot spin all the way round, and the rules forbid opening a servo to convert it.
+  - **Plugging in a 3-wire device** (worked out on the bench on 2026-10-05; photos are on page 14 of the *BEST Robot Construction* notes):
+    - The brain's lettered slots take a plug with bare pins, which is one end of an extension cable. A servo's own lead ends in a plug with holes and does not fit the brain.
+    - At the brain, the white (signal) wire goes toward the screen and the black wire away from it.
+    - The servo lead joins the hole end of the extension through a loose yellow three-pin strip. Colours must run straight across: black to black, red to red, white to white. Nothing stops this join going together backwards.
+    - A servo that does nothing and turns freely by hand while the program is commanding it has a wiring fault, most often that join reversed. Reversing it did no damage. Check this before suspecting the code.
 
 What this means for the code:
 
-- **Use `set_power`, not `spin`.** The SDK documents `Motor55.spin` in volts (`spin(FORWARD, 3, VOLT)`), with `VOLT` as the default unit, so `spin(FORWARD, 50)` asks for 50 volts. `set_power(motor, percent)` converts a -100 to 100 percent into volts using `get_max_voltage()`. Whether `spin` also accepts `PERCENT` is not confirmed; do not rely on it.
+- **Use `set_power`, not `spin`.** The SDK documents `Motor55.spin` in volts (`spin(FORWARD, 3, VOLT)`), with `VOLT` as the default unit, so `spin(FORWARD, 50)` asks for 50 volts. `set_power(motor, percent)` converts a -100 to 100 percent into volts using `get_max_voltage()`. The VEX API page for the MC55 says `spin` also accepts `PERCENT`, but the SDK's own comments do not, and nobody has tried it on the brain. Keep using `set_power`.
+- **100% is 8 volts.** On 2026-10-05 `get_max_voltage()` returned 8000 (millivolts) for a large motor on an MC55, so `set_power(motor, 100)` sends 8 V even though the battery is 12.8 V. The VEX API page gives `spin` in `VOLT` a range of -12.0 to 12.0, and the C++ API has a constructor `motor55(index, maxv, reverse)` that sets the limit; the Python docs show only `Motor55(port, reverse)`. VEX publishes the BEST motor figures at 7.2 V, so the 8 V default is already slightly above that, and nothing found says the motors are meant to run higher. The game rules and construction notes say nothing about it. Do not command more than `get_max_voltage()` or pass a maximum voltage to `Motor55` unless a person says the hub has confirmed it is allowed and safe. `set_power` clamps to 100% for this reason. If a mechanism is too slow, say that the fix is gearing or wheel size.
 - **No built-in feedback.** `Motor55` can set power, reverse, stop, set brake mode, limit current (`set_max_torque`), and report current and temperature. It has no position or velocity, so `spin_for`, `spin_to_position`, and anything measured in degrees or turns do not exist for it. There are no encoders in the kit, so nothing measures wheel travel. A potentiometer on a pivot or a microswitch at the end of travel is how a mechanism knows where it is (`auto_move_to_angle` and `auto_run_until_switch` are the examples).
 - **No `MotorGroup`.** It only accepts `Motor` (Smart Motor) objects. Command each `Motor55` individually.
 - **Only four motors.** Any design has to split them between driving and mechanisms; do not write code that assumes more.
 - **No CAN devices.** The V5 brain has no CAN bus, so parts such as a CTRE CANcoder cannot be used even if available.
 
-Keep these tables in step with the Devices section and the controls comment in `src/main.py`. When a change adds, removes, or moves a device or a control, update the table in the same commit. Everything below is a placeholder until the robot is wired.
+These tables describe `examples/example.py`. Keep them in step with its Devices section and controls comment: when a change adds, removes, or moves a device or a control, update the table in the same commit. Everything below is a placeholder until the robot is wired.
+
+`src/main.py` has its own tables at the end of this section.
 
 | Port | Device (type) | Name in code | Reversed? | Notes |
 | ---- | ------------- | ------------ | --------- | ----- |
@@ -76,13 +125,26 @@ Keep these tables in step with the Devices section and the controls comment in `
 
 | Controller input | What it does |
 | ---------------- | ------------ |
-| Axis 3 (left stick up/down) | Drive forward/back |
-| Axis 1 (right stick left/right) | Turn |
+| Axis 3 (left stick up/down) | Arcade (`TANK_CONTROLS = False`, the default): drive forward/back. Tank: left wheels |
+| Axis 1 (right stick left/right) | Arcade: turn. Tank: unused |
+| Axis 2 (right stick up/down) | Tank (`TANK_CONTROLS = True`): right wheels. Arcade: unused |
 | L1 / L2 | `motor_3` forward / reverse |
 | R1 / R2 | `motor_4` forward / reverse |
 | X / Y | `example_servo` to position 1 / position 2 |
 | A | Start the autonomous routine |
 | B | Cancel the autonomous routine |
+
+These two tables describe `src/main.py`, the program on the brain. Keep them in step with it the same way. Right now it is a temporary bench test with the motor and servo free on the bench, not on a robot.
+
+| Port | Device (type) | Name in code | Reversed? | Notes |
+| ---- | ------------- | ------------ | --------- | ----- |
+| Smart 1 | MC55 + large motor (`Motor55`) | `left_motor` | No | Bench test. Port confirmed by a person; direction not meaningful until the motor is on the robot |
+| 3-wire A | Servo (`Servo`) | `test_servo` | | Bench test. Port confirmed by a person |
+
+| Controller input | What it does |
+| ---------------- | ------------ |
+| Axis 3 (left stick up/down) | Runs `left_motor`, proportional, full stick = `TEST_MAX_POWER` (100%) |
+| Axis 1 (right stick left/right) | Turns `test_servo` to follow the stick, full stick = `SERVO_MAX_DEGREES` (50) |
 
 ## Autonomous in this game
 
@@ -112,7 +174,8 @@ This code moves a physical robot around students, and none of it can be run off 
 - `develop` is the default branch and where day-to-day work lands. `main` is the known-good code that goes to competition; it only changes through a PR from `develop`.
 - Both branches are protected: direct pushes are rejected, and a PR needs an approving review from the team before it can merge.
 - Start every change on a new branch off an up-to-date `develop`. Name it like a commit, `type/short-description`, e.g. `feat/arm-control` or `tune/auto-timing`.
-- Push the branch and open a PR against `develop`, then stop. A person reviews and merges. Agents do not merge PRs and never use the admin bypass (`gh pr merge --admin`), even if they have permission.
+- Pushing the branch is fine. Do not open a PR unless the person you are working with asks for one in that conversation. They may still be testing, and a PR asks the team for a review.
+- When asked for a PR, open it against `develop`, then stop. A person reviews and merges. Agents do not merge PRs and never use the admin bypass (`gh pr merge --admin`), even if they have permission.
 
 ## Commit messages
 
