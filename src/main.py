@@ -30,10 +30,25 @@ controller = Controller()
 left_motor = Motor55(Ports.PORT1, False)
 right_motor = Motor55(Ports.PORT2, True)
 fork_motor = Motor55(Ports.PORT3, False)
+fork_motor.set_stopping(BRAKE)
+elapsed_time = Timer()
+
+# configure the reset timer callback event
+#def reset_timer():
+#    elapsed_time.clear()  # reset the timer when the fork is moving
+#    fork_motor.spin(FORWARD, 12 * 100 / 100, VOLT)  # hold the fork in place when the timer is reset
+
+#controller.buttonR1.pressed(reset_timer)
+#controller.buttonR2.pressed(reset_timer)
+
 
 # Deadband helps prevent the motors from moving when the controller is near its center position.
-DEADBAND = 5
-FORKLIFT_POWER = 10
+DEADBAND = 5 #percentages
+FORKLIFT_POWER_UP = 100   # percentages
+FORKLIFT_HOLD_POWER = 0   # percentages
+FORKLIFT_POWER_DOWN = -100  # percentages
+MAX_CURRENT = 1.2   # Amps
+MAX_TIME_AFTER_BUTTON_PRESS = 1000  # milliseconds
 
 # Runs one motor at a power from -100 (full reverse) to 100 (full forward).
 #
@@ -41,7 +56,7 @@ FORKLIFT_POWER = 10
 # for you. ALWAYS use set_power() instead of calling motor.spin() directly:
 # motor.spin(FORWARD, 50) would ask for 50 volts, not 50 percent.
 def set_power(motor, percent):
-    
+    print("it reached line 90")
     if percent > 100:
         percent = 100
     if percent < -100:
@@ -65,14 +80,22 @@ def driver_control():
         left = apply_deadband(controller.axis3.position())
         right = apply_deadband(controller.axis2.position())
         tank_drive(left, right)
+        
+        
+        #move forklift up and down
+        print("forklift current: ", fork_motor.current())
+        if fork_motor.current() > MAX_CURRENT and elapsed_time.time() > MAX_TIME_AFTER_BUTTON_PRESS:
+            set_power(fork_motor, FORKLIFT_HOLD_POWER)
+        else:      
+            if controller.buttonR1.pressing():
+                set_power(fork_motor, FORKLIFT_POWER_UP)
+            elif controller.buttonR2.pressing():
+                set_power(fork_motor, FORKLIFT_POWER_DOWN)
+            else:
+                set_power(fork_motor, FORKLIFT_HOLD_POWER)
+        wait(20, MSEC)            
+            
 
-        # move forklift up and down
-        if controller.buttonR1.pressing():
-            set_power(fork_motor, FORKLIFT_POWER)
-        elif controller.buttonR2.pressing():
-            set_power(fork_motor, -FORKLIFT_POWER)
-        else:
-            set_power(fork_motor, 0)
 
 def autonomous():
     return
