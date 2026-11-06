@@ -27,13 +27,17 @@ controller = Controller()
 
 # Drive motors. Each one goes through an MC55, so it's a Motor55.
 # If one side drives backwards, flip its True/False.
-left_motor = Motor55(Ports.PORT1, False)
-right_motor = Motor55(Ports.PORT2, True)
-fork_motor = Motor55(Ports.PORT3, False)
+left_motor = Motor55(Ports.PORT1, True)
+right_motor = Motor55(Ports.PORT2, False)
+fork_motor = Motor55(Ports.PORT3, True)
 
 # Deadband helps prevent the motors from moving when the controller is near its center position.
-DEADBAND = 5
-FORKLIFT_POWER = 10
+DEADBAND = 50
+FORKLIFT_UP_POWER = 100
+FORKLIFT_DOWN_POWER = -100
+FORKLIFT_UP_POWER_SLOW = 30
+FORKLIFT_DOWN_POWER_SLOW = -20
+FORKLIFT_HOLD_POWER = 0
 
 # Runs one motor at a power from -100 (full reverse) to 100 (full forward).
 #
@@ -68,11 +72,17 @@ def driver_control():
 
         # move forklift up and down
         if controller.buttonR1.pressing():
-            set_power(fork_motor, FORKLIFT_POWER)
+            set_power(fork_motor, FORKLIFT_UP_POWER)
         elif controller.buttonR2.pressing():
-            set_power(fork_motor, -FORKLIFT_POWER)
+            set_power(fork_motor, FORKLIFT_DOWN_POWER) 
+        
+        # lower speed
+        elif controller.buttonL1.pressing():
+            set_power(fork_motor, FORKLIFT_UP_POWER_SLOW)
+        elif controller.buttonL2.pressing():
+            set_power(fork_motor, FORKLIFT_DOWN_POWER_SLOW) 
         else:
-            set_power(fork_motor, 0)
+            set_power(fork_motor, FORKLIFT_HOLD_POWER)
 
 def autonomous():
     return
