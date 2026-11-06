@@ -84,6 +84,8 @@ def driver_control():
         else:
             set_power(fork_motor, FORKLIFT_HOLD_POWER)
 
+        wait(20, MSEC)
+
 def autonomous():
     return
 
