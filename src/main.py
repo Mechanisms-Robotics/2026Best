@@ -38,6 +38,8 @@ FORKLIFT_DOWN_POWER = -100
 FORKLIFT_UP_POWER_SLOW = 30
 FORKLIFT_DOWN_POWER_SLOW = -20
 FORKLIFT_HOLD_POWER = 0
+FORKLIFT_TIME_TOP = 8000 #ms
+FORKLIFT_TIME_SHELF = 5000 #ms
 
 # Runs one motor at a power from -100 (full reverse) to 100 (full forward).
 #
@@ -64,6 +66,16 @@ def apply_deadband(value):
         return 0
     return value
 
+def forklift_top(run_time):
+    set_power(fork_motor, 100)
+    elapsed_time = 0
+    while elapsed_time < run_time:
+        if controller.buttonX.pressing():
+            break
+        wait(20, MSEC)
+        elapsed_time += 20
+    set_power(fork_motor, FORKLIFT_HOLD_POWER)
+
 def driver_control():
     while True:
         left = apply_deadband(controller.axis3.position())
@@ -81,6 +93,12 @@ def driver_control():
             set_power(fork_motor, FORKLIFT_UP_POWER_SLOW)
         elif controller.buttonL2.pressing():
             set_power(fork_motor, FORKLIFT_DOWN_POWER_SLOW) 
+        
+        # move forklift to top or shelf position
+        elif controller.buttonA.pressing():
+            forklift_top(FORKLIFT_TIME_TOP)
+        elif controller.buttonB.pressing():
+            forklift_top(FORKLIFT_TIME_SHELF)      
         else:
             set_power(fork_motor, FORKLIFT_HOLD_POWER)
 
