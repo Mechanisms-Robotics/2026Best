@@ -29,6 +29,8 @@ controller = Controller()
 # If one side drives backwards, flip its True/False.
 left_motor = Motor55(Ports.PORT1, False)
 right_motor = Motor55(Ports.PORT2, True)
+left_motor = Motor55(Ports.PORT1, False)
+right_motor = Motor55(Ports.PORT2, True)
 fork_motor = Motor55(Ports.PORT3, False)
 fork_motor.set_stopping(BRAKE)
 elapsed_time = Timer()
@@ -43,12 +45,13 @@ elapsed_time = Timer()
 
 
 # Deadband helps prevent the motors from moving when the controller is near its center position.
-DEADBAND = 10 #percentages
-FORKLIFT_POWER_UP = 100   # percentages
-FORKLIFT_HOLD_POWER = 0   # percentages
-FORKLIFT_POWER_DOWN = -100  # percentages
-MAX_CURRENT = 1.2   # Amps
-MAX_TIME_AFTER_BUTTON_PRESS = 1000  # milliseconds
+DEADBAND = 5
+DEADBAND = 50
+FORKLIFT_UP_POWER = 100
+FORKLIFT_DOWN_POWER = -100
+FORKLIFT_UP_POWER_SLOW = 30
+FORKLIFT_DOWN_POWER_SLOW = -20
+FORKLIFT_HOLD_POWER = 0
 
 # Runs one motor at a power from -100 (full reverse) to 100 (full forward).
 #
@@ -76,30 +79,26 @@ def apply_deadband(value):
     return value
 
 def driver_control():
-    while True:
-        left = apply_deadband(controller.axis3.position())
-        right = apply_deadband(controller.axis2.position())
-        tank_drive(left, right)
-        
-        
-        #move forklift up and down
-        print("forklift current: ", fork_motor.current())
-        if fork_motor.current() > MAX_CURRENT and elapsed_time.time() > MAX_TIME_AFTER_BUTTON_PRESS:
-            set_power(fork_motor, FORKLIFT_HOLD_POWER)
-        else:      
-            if controller.buttonR1.pressing():
-                set_power(fork_motor, FORKLIFT_POWER_UP)
-            elif controller.buttonR2.pressing():
-                set_power(fork_motor, FORKLIFT_POWER_DOWN)
-            else:
-                set_power(fork_motor, FORKLIFT_HOLD_POWER)
-        wait(20, MSEC)            
-            
+    left = apply_deadband(controller.axis3.position())
+    right = apply_deadband(controller.axis2.position())
+    tank_drive(left, right)
+    wait(20, MSEC)
 
+        # move forklift up and down
+    if controller.buttonR1.pressing():
+        set_power(fork_motor, FORKLIFT_UP_POWER)
+    elif controller.buttonR2.pressing():
+        set_power(fork_motor, FORKLIFT_DOWN_POWER) 
+        
+        # lower speed
+    elif controller.buttonL1.pressing():
+            set_power(fork_motor, FORKLIFT_UP_POWER_SLOW)
+    elif controller.buttonL2.pressing():
+            set_power(fork_motor, FORKLIFT_DOWN_POWER_SLOW) 
+    else:
+            set_power(fork_motor, FORKLIFT_HOLD_POWER)
+
+    wait(20, MSEC)
 
 def autonomous():
     return
-
-# This must stay the last line of the file. With no field control plugged in,
-# running the program goes straight to driver_control().
-competition = Competition(driver_control, autonomous)
