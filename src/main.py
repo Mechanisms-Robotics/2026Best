@@ -112,3 +112,5 @@ def servo():
 
 def autonomous():
     return
+
+competition = Competition(driver_control, autonomous)
