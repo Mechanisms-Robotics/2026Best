@@ -3,5 +3,6 @@
 	"python.analysis.extraPaths": [
 		"build/vex-sdk/V5_1_0_1_25/vexv5/stubs"
 	],
-	"python.analysis.typeCheckingMode": "basic"
+	"python.analysis.typeCheckingMode": "basic",
+	"python.analysis.stubPath": "c:\\Users\\Jun734\\AppData\\Roaming\\Code\\User\\globalStorage\\vexrobotics.vexcode\\sdk\\python\\V5\\V5_1_0_1_25\\vexv5\\stubs"
 }
