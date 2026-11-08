@@ -43,7 +43,7 @@ elapsed_time = Timer()
 
 
 # Deadband helps prevent the motors from moving when the controller is near its center position.
-DEADBAND = 5 #percentages
+DEADBAND = 10 #percentages
 FORKLIFT_POWER_UP = 100   # percentages
 FORKLIFT_HOLD_POWER = 0   # percentages
 FORKLIFT_POWER_DOWN = -100  # percentages
