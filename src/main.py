@@ -29,9 +29,9 @@ controller = Controller()
 # If one side drives backwards, flip its True/False.
 
 servo_a = Servo(brain.three_wire_port.a)
-left_motor = Motor55(Ports.PORT1, True)
-right_motor = Motor55(Ports.PORT2, False)
-fork_motor = Motor55(Ports.PORT3, True)
+left_motor = Motor55(Ports.PORT1, False)
+right_motor = Motor55(Ports.PORT2, True)
+fork_motor = Motor55(Ports.PORT3, False)
 fork_motor.set_stopping(BRAKE)
 elapsed_time = Timer()
 
