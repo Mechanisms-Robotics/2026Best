@@ -27,6 +27,8 @@ controller = Controller()
 
 # Drive motors. Each one goes through an MC55, so it's a Motor55.
 # If one side drives backwards, flip its True/False.
+
+servo_a = Servo(brain.three_wire_port.a)
 left_motor = Motor55(Ports.PORT1, True)
 right_motor = Motor55(Ports.PORT2, False)
 fork_motor = Motor55(Ports.PORT3, True)
@@ -84,6 +86,14 @@ def driver_control():
         else:
             set_power(fork_motor, FORKLIFT_HOLD_POWER)
 
+        wait(20, MSEC)
+
+def servo():
+    while True:
+        if controller.buttonX.pressing():
+            servo_a.set_position(90, DEGREES)
+        elif controller.buttonY.pressing():
+            servo_a.set_position(-90, DEGREES)
         wait(20, MSEC)
 
 def autonomous():
