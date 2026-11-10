@@ -1,6 +1,11 @@
 # VEX extension build output
 build/
 
+# VS Code settings. The VEX extension writes paths into these files that only
+# exist on one computer, so each computer keeps its own copy. README.md shows
+# how to create .vscode/vex_project_settings.json after cloning.
+.vscode/
+
 # Python caches
 __pycache__/
 *.pyc

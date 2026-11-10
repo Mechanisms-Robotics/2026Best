@@ -10,10 +10,10 @@ Baseline robot code for a high school team's (Mechanisms Robotics) 2026 BEST Rob
 
 There is no build step or test suite. Downloading normally goes through the VEX VS Code extension (`vexrobotics.vexcode`); an agent can also download from a terminal with `vexcom` (see "Downloading from a terminal" below):
 
-- **Download to the brain:** connect the brain (or a paired controller) over USB and click **Download** in the VEX toolbar. The program lands in slot 1 (set in `.vscode/vex_project_settings.json`).
+- **Download to the brain:** connect the brain (or a paired controller) over USB and click **Download** in the VEX toolbar. The program lands in slot 1 (set in `.vscode/vex_project_settings.json`, which each computer keeps for itself; see "`.vscode/` is not in Git" below).
 - **Check code from a terminal:** `tools/check.sh`. Run it after every change to `src/main.py` or `examples/example.py` and fix what it reports before committing. It confirms `src/main.py` is the only Python file in `src/`, then checks the syntax of both files and runs Pyright on them against the VEX V5 Python SDK, so it catches misspelled `vex` names and wrong arguments. The first run downloads the SDK from VEX into `build/` (gitignored); it needs `bash`, `python`, `curl`, `unzip`, and `npx` (Git Bash on Windows works). GitHub runs the same script on every PR (`.github/workflows/check.yml`).
-- **In VS Code:** Pylance in `basic` type-checking mode shows the same errors as red squiggles once the extension has downloaded the SDK.
-- **SDK version:** `tools/check.sh`, `tools/pyrightconfig.json` and the `python.analysis.extraPaths` entry in `.vscode/settings.json` name the same SDK version as `sdkVersion` in `.vscode/vex_project_settings.json`. Change all four together.
+- **In VS Code:** Pylance in `basic` type-checking mode shows the same errors as red squiggles once the extension has downloaded the SDK. That mode is set in each person's own `.vscode/settings.json` (README.md, "Autocomplete not working?").
+- **SDK version:** `tools/check.sh`, `tools/pyrightconfig.json` and `sdkVersion` in the sample `vex_project_settings.json` in `README.md` name the same SDK version. Change all three together, and tell the team to change `sdkVersion` in their own `.vscode/vex_project_settings.json`.
 
 The `vex` module does not exist off the brain, so neither file can be run or imported locally. A passing check means the code is well-formed, not that the robot behaves correctly. Say so when handing back changes rather than claiming they were tested.
 
@@ -51,7 +51,7 @@ A finished download means the file is on the brain, not that it works. The "Test
 - **Single file.** The VEX extension downloads only `src/main.py` (`project.python.main`). Do not split code into modules or add imports of local files; organize with functions and classes inside the one file. `examples/example.py` is never downloaded: code is copied from it into `src/main.py`, not imported.
 - **MicroPython on the brain.** Most of the standard library is missing and nothing can be `pip install`ed. Stick to `from vex import *` and language built-ins.
 - **Every loop must yield.** Long-running loops need a `wait(20, MSEC)` (or similar) so the brain can service other tasks.
-- **`python.analysis.stubPath` stays out of commits.** The VEX extension writes this machine-specific path into `.vscode/settings.json` on each computer, and rewrites it every time the project opens. A Git clean filter (`.gitattributes`, `tools/clean-settings.awk`) strips the line before Git sees the file, so the file can be committed normally. The filter is a per-clone Git setting that `tools/check.sh` switches on, and the same script fails if the line is ever staged or committed. Do not add the line by hand or remove the filter. The extension also rewrites `.vscode/extensions.json` and `.vscode/vex_project_settings.json` without a newline at the end; they are committed that way on purpose so they do not show as modified.
+- **`.vscode/` is not in Git.** The VEX extension writes `python.analysis.stubPath`, a path that only exists on one computer, into `.vscode/settings.json` and rewrites it every time the project opens, so committed copies kept conflicting between students' computers. `.gitignore` lists the whole folder and each computer keeps its own copy. A fresh clone needs `.vscode/vex_project_settings.json` before the VEX extension treats the folder as a project; `README.md` gives its contents. `tools/check.sh` fails if any file under `.vscode/` is staged or committed. Do not add them back with `git add -f`.
 
 ## Structure of the code
 
@@ -186,6 +186,6 @@ Use semantic (Conventional Commits) messages: `type: short summary` in the imper
 - `tune` — changing constants only (ports, speeds, deadband, autonomous timings)
 - `refactor` — restructuring with no behavior change
 - `docs` — README, comments, or agent instructions
-- `chore` — project config and tooling (`.vscode/`, `.gitignore`)
+- `chore` — project config and tooling (`.gitignore`)
 
 API reference: https://api.vex.com/v5/home/python/index.html
