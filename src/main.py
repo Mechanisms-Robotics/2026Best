@@ -92,7 +92,6 @@ def driver_control():
         left = apply_deadband(controller.axis3.position())
         right = apply_deadband(controller.axis2.position())
         tank_drive(left, right)
-        wait(20, MSEC)
 
         # forklift
         if controller.buttonR1.pressing():
