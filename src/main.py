@@ -29,6 +29,8 @@ controller = Controller()
 # If one side drives backwards, flip its True/False.
 
 servo_a = Servo(brain.three_wire_port.a)
+servo_b = Servo(brain.three_wire_port.b)
+servo_c = Servo(brain.three_wire_port.c)
 left_motor = Motor55(Ports.PORT1, False)
 right_motor = Motor55(Ports.PORT2, True)
 fork_motor = Motor55(Ports.PORT3, True)
@@ -47,7 +49,9 @@ elapsed_time = Timer()
 
 # Deadband helps prevent the motors from moving when the controller is near its center position.
 DEADBAND = 5
-SERVO_DEGREES_ROTATED = 20
+SERVO_A_DEGREES_ROTATED = 20
+SERVO_B_DEGREES_ROTATED = 20
+SERVO_C_DEGREES_ROTATED = 20
 FORKLIFT_UP_POWER = 100
 FORKLIFT_DOWN_POWER = -100
 FORKLIFT_UP_POWER_SLOW = 30
@@ -108,10 +112,10 @@ def driver_control():
 
         # servo
         if controller.buttonX.pressing():
-            servo_a.set_position(SERVO_DEGREES_ROTATED, DEGREES)
+            servo_a.set_position(SERVO_A_DEGREES_ROTATED, DEGREES)
         elif controller.buttonY.pressing():
-            servo_a.set_position(-SERVO_DEGREES_ROTATED, DEGREES)
-
+            servo_a.set_position(-SERVO_A_DEGREES_ROTATED, DEGREES)
+        
         wait(20, MSEC)
 
 def autonomous():
