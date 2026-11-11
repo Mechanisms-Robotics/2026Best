@@ -57,8 +57,8 @@ FORKLIFT_DOWN_POWER = -100
 FORKLIFT_UP_POWER_SLOW = 30
 FORKLIFT_DOWN_POWER_SLOW = -20
 FORKLIFT_HOLD_POWER = 0
-JITTER_SPEED_UP = 30
-JITTER_SPEED_DOWN = 45
+JITTER_SPEED_UP = 100
+JITTER_SPEED_DOWN = 50
 
 def set_power(motor, percent):
     if percent > 100:
@@ -107,6 +107,7 @@ def driver_control():
 
         if controller.buttonB.pressing():
                 jitter_fork_forward(JITTER_SPEED_UP)
+                wait(20, MSEC)
                 jitter_fork_reverse(JITTER_SPEED_DOWN)
 
         # servo
