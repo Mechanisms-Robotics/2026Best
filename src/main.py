@@ -37,16 +37,6 @@ fork_motor = Motor55(Ports.PORT3, True)
 fork_motor.set_stopping(HOLD)
 elapsed_time = Timer()
 
-# configure the reset timer callback event
-def reset_timer():
-   elapsed_time.clear()  # reset the timer when the fork is moving
-   fork_motor.spin(FORWARD, 12 * 100 / 100, VOLT)  # hold the fork in place when the timer is reset
-
-controller.buttonR1.pressed(reset_timer)
-controller.buttonR2.pressed(reset_timer)
-
-
-
 # Deadband helps prevent the motors from moving when the controller is near its center position.
 DEADBAND = 5
 SERVO_A_DEPLOYED_POSITION = 70
@@ -71,13 +61,6 @@ def set_power(motor, percent):
 
 def deploy_servo(servo_motor, position):
     servo_motor.set_position(position, DEGREES)
-
-controller.buttonX.pressed(deploy_servo, (servo_a, SERVO_A_DEPLOYED_POSITION))
-controller.buttonY.pressed(deploy_servo, (servo_a, -SERVO_A_DEPLOYED_POSITION))
-controller.buttonA.pressed(deploy_servo, (servo_a, SERVO_A_INITIAL_POSITION))
-controller.buttonLeft.pressed(deploy_servo, (servo_b, SERVO_B_DEPLOYED_POSITION))
-controller.buttonUp.pressed(deploy_servo, (servo_b, -SERVO_B_DEPLOYED_POSITION))
-controller.buttonRight.pressed(deploy_servo, (servo_b, SERVO_B_INITIAL_POSITION))
 
 def tank_drive(left, right):
     set_power(left_motor, left)
@@ -120,11 +103,16 @@ def driver_control():
                 jitter_fork_forward(JITTER_SPEED_UP)
                 jitter_fork_reverse(JITTER_SPEED_DOWN)
         
-        
-        
         wait(20, MSEC)
 
 def autonomous():
     return
+
+controller.buttonX.pressed(deploy_servo, (servo_a, SERVO_A_DEPLOYED_POSITION))
+controller.buttonY.pressed(deploy_servo, (servo_a, -SERVO_A_DEPLOYED_POSITION))
+controller.buttonA.pressed(deploy_servo, (servo_a, SERVO_A_INITIAL_POSITION))
+controller.buttonLeft.pressed(deploy_servo, (servo_b, SERVO_B_DEPLOYED_POSITION))
+controller.buttonUp.pressed(deploy_servo, (servo_b, -SERVO_B_DEPLOYED_POSITION))
+controller.buttonRight.pressed(deploy_servo, (servo_b, SERVO_B_INITIAL_POSITION))
 
 competition = Competition(driver_control, autonomous)
