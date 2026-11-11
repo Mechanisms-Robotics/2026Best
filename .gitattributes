@@ -1,0 +1,4 @@
+# The VEX extension writes a path into this file that only exists on one
+# computer. This filter (tools/clean-settings.awk) removes it before Git sees
+# the file. Run tools/check.sh once after cloning to switch the filter on.
+.vscode/settings.json filter=vscode-settings

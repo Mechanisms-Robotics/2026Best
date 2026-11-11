@@ -5,34 +5,11 @@ Mechanisms Robotics robot code for the 2026 BEST season. The robot uses a VEX V5
 ## Setup (Windows)
 
 1. Install [VS Code](https://code.visualstudio.com/). If WPILib's VS Code is already on your machine, you can use that.
-2. In VS Code, open the Extensions view (**Ctrl+Shift+X**) and install:
+2. Clone this repo and open the folder in VS Code (**File → Open Folder**).
+3. When VS Code asks whether to install the recommended extensions, click **Install**. That installs:
    - **VEX Robotics** (`vexrobotics.vexcode`): builds and downloads code to the brain
    - **Python** (`ms-python.python`): autocomplete and error checking
-3. Clone this repo.
-4. In the repo, make a folder called `.vscode` and save this as `.vscode/vex_project_settings.json`. It tells the VEX extension that the folder is a V5 Python project. It is not in Git: `.gitignore` leaves out the whole `.vscode` folder, because the VEX extension writes paths there that only exist on your computer.
-
-   ```json
-   {
-   	"extension": {
-   		"version": "0.7.2025041600",
-   		"json": 2
-   	},
-   	"project": {
-   		"name": "2026Best",
-   		"description": "Mechanisms Robotics 2026 BEST robot (VEX V5, Python)",
-   		"creationDate": "9/29/2026, 12:00:00 PM",
-   		"platform": "V5",
-   		"language": "python",
-   		"slot": 1,
-   		"sdkVersion": "V5_1_0_1_25",
-   		"python": {
-   			"main": "src/main.py"
-   		}
-   	}
-   }
-   ```
-
-5. Open the folder in VS Code (**File → Open Folder**). The first time, the VEX extension downloads the V5 Python SDK. Wait for that to finish before downloading code.
+4. The first time you open the project, the VEX extension downloads the V5 Python SDK. Wait for that to finish before downloading code.
 
 ## Downloading to the robot
 
@@ -45,7 +22,7 @@ Mechanisms Robotics robot code for the 2026 BEST season. The robot uses a VEX V5
 ```
 src/main.py                       <- all robot code lives here
 examples/example.py               <- working examples to copy from (not downloaded)
-.vscode/vex_project_settings.json <- tells the VEX extension this is a V5 Python project (not in Git; see Setup)
+.vscode/vex_project_settings.json <- tells the VEX extension this is a V5 Python project
 docs/fiducial-map.md              <- where each fiducial is on the field, and its ID
 ```
 
@@ -64,6 +41,4 @@ Everything has to be in `src/main.py`. VEX Python downloads one file, so you can
 
 ## Autocomplete not working?
 
-The VEX extension adds `python.analysis.stubPath` to `.vscode/settings.json` on each machine, pointing at the SDK it downloaded. That path is specific to your computer, which is why `.vscode` is not in Git. If autocomplete for `vex` stops working, reopen the folder so the extension can set the path again.
-
-To see the same errors as `tools/check.sh` as red squiggles, add `"python.analysis.typeCheckingMode": "basic"` to that file.
+The VEX extension adds `python.analysis.stubPath` to `.vscode/settings.json` on each machine, and that path is specific to your computer. Run `tools/check.sh` once after cloning: it sets Git up to leave that line out of commits, so you can commit the file like any other. If autocomplete for `vex` stops working, reopen the folder so the extension can set the path again.
