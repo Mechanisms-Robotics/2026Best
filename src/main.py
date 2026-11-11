@@ -48,8 +48,8 @@ FORKLIFT_DOWN_POWER = -100
 FORKLIFT_UP_POWER_SLOW = 30
 FORKLIFT_DOWN_POWER_SLOW = -20
 FORKLIFT_HOLD_POWER = 0
-JITTER_SPEED_UP = 100
-JITTER_SPEED_DOWN = 50
+JITTER_SPEED_UP = 5
+JITTER_SPEED_DOWN = -5
 
 def set_power(motor, percent):
     if percent > 100:
@@ -70,13 +70,9 @@ def apply_deadband(value):
     if abs(value) < DEADBAND:
         return 0
     return value
-def jitter_fork_forward(jitter_speed):
-    fork_motor.spin(FORWARD, jitter_speed, VOLT)
-    wait(20, MSEC)
-    fork_motor.stop()
 
-def jitter_fork_reverse(jitter_speed):
-    fork_motor.spin(REVERSE, jitter_speed, VOLT)
+def jitter_fork_percent(jitter_speed):
+    set_power(fork_motor,jitter_speed)
     wait(20, MSEC)
     fork_motor.stop()
     
@@ -100,9 +96,8 @@ def driver_control():
             set_power(fork_motor, FORKLIFT_HOLD_POWER)
 
         if controller.buttonB.pressing():
-                jitter_fork_forward(JITTER_SPEED_UP)
-                wait(20, MSEC)
-                jitter_fork_reverse(JITTER_SPEED_DOWN)
+                jitter_fork_percent(JITTER_SPEED_UP)
+                jitter_fork_percent(JITTER_SPEED_DOWN)
         
         wait(20, MSEC)
 
