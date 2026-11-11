@@ -119,8 +119,6 @@ def driver_control():
         if controller.buttonB.pressing():
                 jitter_fork_forward(JITTER_SPEED_UP)
                 jitter_fork_reverse(JITTER_SPEED_DOWN)
-
-        # servo
         
         
         
