@@ -2,31 +2,20 @@
 # staged or compared (see .gitattributes; tools/check.sh switches it on).
 #
 # The VEX extension writes "python.analysis.stubPath" into that file with a
-# path that only exists on your computer. This script drops that one line, so
-# Git never sees it and the committed file works on every machine. Your own
-# copy of the file on disk is not changed.
+# full path that only exists on your computer. This script swaps that path
+# for a relative one, build/vex-sdk/..., so the committed file works on every
+# machine. tools/check.sh downloads the same SDK into build/. Your own copy of
+# the file on disk is not changed.
+#
+# The SDK version below must match SDK_VERSION in tools/check.sh.
 
-# Windows line endings would stop the patterns below from matching.
+# Windows line endings would stop the pattern below from matching.
 { sub(/\r$/, "") }
 
-# Skip the machine-specific line.
-/"python\.analysis\.stubPath"/ { next }
-
-# Print each line one step late, so that if the removed line was the last
-# setting, the comma left on the line before it can be removed too.
-{
-    if (have_previous) {
-        if ($0 ~ /^[ \t]*}[ \t]*$/) {
-            sub(/,[ \t]*$/, "", previous)
-        }
-        print previous
-    }
-    previous = $0
-    have_previous = 1
+# Replace whatever path the extension wrote with the relative one.
+/"python\.analysis\.stubPath"/ {
+    sub(/"python\.analysis\.stubPath"[ \t]*:[ \t]*"[^"]*"/,
+        "\"python.analysis.stubPath\": \"build/vex-sdk/V5_1_0_1_25/vexv5/stubs\"")
 }
 
-END {
-    if (have_previous) {
-        print previous
-    }
-}
+{ print }
