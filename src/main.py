@@ -38,12 +38,12 @@ fork_motor.set_stopping(HOLD)
 elapsed_time = Timer()
 
 # configure the reset timer callback event
-#def reset_timer():
-#    elapsed_time.clear()  # reset the timer when the fork is moving
-#    fork_motor.spin(FORWARD, 12 * 100 / 100, VOLT)  # hold the fork in place when the timer is reset
+def reset_timer():
+   elapsed_time.clear()  # reset the timer when the fork is moving
+   fork_motor.spin(FORWARD, 12 * 100 / 100, VOLT)  # hold the fork in place when the timer is reset
 
-#controller.buttonR1.pressed(reset_timer)
-#controller.buttonR2.pressed(reset_timer)
+controller.buttonR1.pressed(reset_timer)
+controller.buttonR2.pressed(reset_timer)
 
 
 
@@ -99,22 +99,22 @@ def jitter_fork_reverse(jitter_speed):
     
 def driver_control():
     while True:
-        # drive
-        # left = apply_deadband(controller.axis3.position())
-        # right = apply_deadband(controller.axis2.position())
-        # tank_drive(left, right)
+        #drive
+        left = apply_deadband(controller.axis3.position())
+        right = apply_deadband(controller.axis2.position())
+        tank_drive(left, right)
 
-        # # forklift
-        # if controller.buttonR1.pressing():
-        #     set_power(fork_motor, FORKLIFT_UP_POWER)
-        # elif controller.buttonR2.pressing():
-        #     set_power(fork_motor, FORKLIFT_DOWN_POWER)
-        # elif controller.buttonL1.pressing():
-        #     set_power(fork_motor, FORKLIFT_UP_POWER_SLOW)
-        # elif controller.buttonL2.pressing():
-        #     set_power(fork_motor, FORKLIFT_DOWN_POWER_SLOW)
-        # else:
-        #     set_power(fork_motor, FORKLIFT_HOLD_POWER)
+        # forklift
+        if controller.buttonR1.pressing():
+            set_power(fork_motor, FORKLIFT_UP_POWER)
+        elif controller.buttonR2.pressing():
+            set_power(fork_motor, FORKLIFT_DOWN_POWER)
+        elif controller.buttonL1.pressing():
+            set_power(fork_motor, FORKLIFT_UP_POWER_SLOW)
+        elif controller.buttonL2.pressing():
+            set_power(fork_motor, FORKLIFT_DOWN_POWER_SLOW)
+        else:
+            set_power(fork_motor, FORKLIFT_HOLD_POWER)
 
         if controller.buttonB.pressing():
                 jitter_fork_forward(JITTER_SPEED_UP)
