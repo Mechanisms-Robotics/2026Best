@@ -49,9 +49,10 @@ elapsed_time = Timer()
 
 # Deadband helps prevent the motors from moving when the controller is near its center position.
 DEADBAND = 5
-SERVO_A_DEGREES_ROTATED = 20
-SERVO_B_DEGREES_ROTATED = 20
-SERVO_C_DEGREES_ROTATED = 20
+SERVO_A_DEPLOYED_POSITION = 70
+SERVO_A_INITIAL_POSITION = 0
+SERVO_B_DEPLOYED_POSITION = 70
+SERVO_B_INITIAL_POSITION = 0
 FORKLIFT_UP_POWER = 100
 FORKLIFT_DOWN_POWER = -100
 FORKLIFT_UP_POWER_SLOW = 30
@@ -67,6 +68,16 @@ def set_power(motor, percent):
         percent = -100
     max_volts = motor.get_max_voltage() / 1000
     motor.spin(FORWARD, max_volts * percent / 100, VOLT)
+
+def deploy_servo(servo_motor, position):
+    servo_motor.set_position(position, DEGREES)
+
+controller.buttonX.pressed(deploy_servo, (servo_a, SERVO_A_DEPLOYED_POSITION))
+controller.buttonY.pressed(deploy_servo, (servo_a, -SERVO_A_DEPLOYED_POSITION))
+controller.buttonA.pressed(deploy_servo, (servo_a, SERVO_A_INITIAL_POSITION))
+controller.buttonLeft.pressed(deploy_servo, (servo_b, SERVO_B_DEPLOYED_POSITION))
+controller.buttonUp.pressed(deploy_servo, (servo_b, -SERVO_B_DEPLOYED_POSITION))
+controller.buttonRight.pressed(deploy_servo, (servo_b, SERVO_B_INITIAL_POSITION))
 
 def tank_drive(left, right):
     set_power(left_motor, left)
@@ -89,31 +100,29 @@ def jitter_fork_reverse(jitter_speed):
 def driver_control():
     while True:
         # drive
-        left = apply_deadband(controller.axis3.position())
-        right = apply_deadband(controller.axis2.position())
-        tank_drive(left, right)
+        # left = apply_deadband(controller.axis3.position())
+        # right = apply_deadband(controller.axis2.position())
+        # tank_drive(left, right)
 
-        # forklift
-        if controller.buttonR1.pressing():
-            set_power(fork_motor, FORKLIFT_UP_POWER)
-        elif controller.buttonR2.pressing():
-            set_power(fork_motor, FORKLIFT_DOWN_POWER)
-        elif controller.buttonL1.pressing():
-            set_power(fork_motor, FORKLIFT_UP_POWER_SLOW)
-        elif controller.buttonL2.pressing():
-            set_power(fork_motor, FORKLIFT_DOWN_POWER_SLOW)
-        else:
-            set_power(fork_motor, FORKLIFT_HOLD_POWER)
+        # # forklift
+        # if controller.buttonR1.pressing():
+        #     set_power(fork_motor, FORKLIFT_UP_POWER)
+        # elif controller.buttonR2.pressing():
+        #     set_power(fork_motor, FORKLIFT_DOWN_POWER)
+        # elif controller.buttonL1.pressing():
+        #     set_power(fork_motor, FORKLIFT_UP_POWER_SLOW)
+        # elif controller.buttonL2.pressing():
+        #     set_power(fork_motor, FORKLIFT_DOWN_POWER_SLOW)
+        # else:
+        #     set_power(fork_motor, FORKLIFT_HOLD_POWER)
 
         if controller.buttonB.pressing():
                 jitter_fork_forward(JITTER_SPEED_UP)
                 jitter_fork_reverse(JITTER_SPEED_DOWN)
 
         # servo
-        if controller.buttonX.pressing():
-            servo_a.set_position(SERVO_A_DEGREES_ROTATED, DEGREES)
-        elif controller.buttonY.pressing():
-            servo_a.set_position(-SERVO_A_DEGREES_ROTATED, DEGREES)
+        
+        
         
         wait(20, MSEC)
 
