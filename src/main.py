@@ -97,7 +97,6 @@ def driver_control():
 
         if controller.buttonB.pressing():
                 jitter_fork_percent(JITTER_SPEED_UP)
-                wait(20, MSEC)
                 jitter_fork_percent(JITTER_SPEED_DOWN)
         
         wait(20, MSEC)
