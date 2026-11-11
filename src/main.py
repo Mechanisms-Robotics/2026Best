@@ -108,11 +108,11 @@ def driver_control():
 def autonomous():
     return
 
-controller.buttonX.pressed(deploy_servo, (servo_a, SERVO_A_DEPLOYED_POSITION))
-controller.buttonY.pressed(deploy_servo, (servo_a, -SERVO_A_DEPLOYED_POSITION))
-controller.buttonA.pressed(deploy_servo, (servo_a, SERVO_A_INITIAL_POSITION))
-controller.buttonLeft.pressed(deploy_servo, (servo_b, SERVO_B_DEPLOYED_POSITION))
-controller.buttonUp.pressed(deploy_servo, (servo_b, -SERVO_B_DEPLOYED_POSITION))
-controller.buttonRight.pressed(deploy_servo, (servo_b, SERVO_B_INITIAL_POSITION))
+controller.buttonA.pressed(deploy_servo, (servo_a, SERVO_A_DEPLOYED_POSITION))
+controller.buttonX.pressed(deploy_servo, (servo_a, -SERVO_A_DEPLOYED_POSITION))
+controller.buttonY.pressed(deploy_servo, (servo_a, SERVO_A_INITIAL_POSITION))
+controller.buttonRight.pressed(deploy_servo, (servo_b, SERVO_B_DEPLOYED_POSITION))
+controller.buttonLeft.pressed(deploy_servo, (servo_b, -SERVO_B_DEPLOYED_POSITION))
+controller.buttonUp.pressed(deploy_servo, (servo_b, SERVO_B_INITIAL_POSITION))
 
 competition = Competition(driver_control, autonomous)
