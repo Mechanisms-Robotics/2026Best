@@ -34,22 +34,28 @@ servo_c = Servo(brain.three_wire_port.c)
 left_motor = Motor55(Ports.PORT1, False)
 right_motor = Motor55(Ports.PORT2, True)
 fork_motor = Motor55(Ports.PORT3, True)
-fork_motor.set_stopping(HOLD)
+# BRAKE, not HOLD: an MC55 can't measure position, so it can only COAST or
+# BRAKE. Brake mode only takes effect when fork_motor.stop() is called.
+fork_motor.set_stopping(BRAKE)
 elapsed_time = Timer()
 
 # Deadband helps prevent the motors from moving when the controller is near its center position.
 DEADBAND = 5
-SERVO_A_DEPLOYED_POSITION = 70
+# Servos only go from -50 to 50 degrees. Don't set these higher than 50.
+SERVO_A_DEPLOYED_POSITION = 50
 SERVO_A_INITIAL_POSITION = 0
-SERVO_B_DEPLOYED_POSITION = 70
+SERVO_B_DEPLOYED_POSITION = 50
 SERVO_B_INITIAL_POSITION = 0
 FORKLIFT_UP_POWER = 100
 FORKLIFT_DOWN_POWER = -100
 FORKLIFT_UP_POWER_SLOW = 30
 FORKLIFT_DOWN_POWER_SLOW = -20
-FORKLIFT_HOLD_POWER = 0
-JITTER_SPEED_UP = 5
-JITTER_SPEED_DOWN = -5
+# Jitter (button B): a quick up-then-down shake of the fork. 5% for 20 ms was
+# too weak and too short to move the geared motor. CHANGE ME: these are
+# starting guesses; tune them on the robot.
+JITTER_SPEED_UP = 40
+JITTER_SPEED_DOWN = -40
+JITTER_TIME_MSEC = 80
 
 def set_power(motor, percent):
     if percent > 100:
@@ -73,7 +79,7 @@ def apply_deadband(value):
 
 def jitter_fork_percent(jitter_speed):
     set_power(fork_motor,jitter_speed)
-    wait(20, MSEC)
+    wait(JITTER_TIME_MSEC, MSEC)
     fork_motor.stop()
     
 def driver_control():
@@ -93,7 +99,8 @@ def driver_control():
         elif controller.buttonL2.pressing():
             set_power(fork_motor, FORKLIFT_DOWN_POWER_SLOW)
         else:
-            set_power(fork_motor, FORKLIFT_HOLD_POWER)
+            # stop() (not 0% power) so the BRAKE stopping mode kicks in.
+            fork_motor.stop()
 
         if controller.buttonB.pressing():
                 jitter_fork_percent(JITTER_SPEED_UP)
