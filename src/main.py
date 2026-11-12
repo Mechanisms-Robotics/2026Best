@@ -42,9 +42,9 @@ elapsed_time = Timer()
 DEADBAND = 5
 # Servos only go from -50 to 50 degrees. Don't set these higher than 50.
 SERVO_B_DEPLOYED_POSITION = 50
-SERVO_B_INITIAL_POSITION = 0
+SERVO_B_INITIAL_POSITION = -40
 SERVO_C_DEPLOYED_POSITION = 50
-SERVO_C_INITIAL_POSITION = 0
+SERVO_C_INITIAL_POSITION = -40
 FORKLIFT_UP_POWER = 100
 FORKLIFT_DOWN_POWER = -100
 FORKLIFT_UP_POWER_SLOW = 30
@@ -84,8 +84,8 @@ def jitter_fork_percent(jitter_speed):
 def driver_control():
     while True:
         #drive
-        left = apply_deadband(controller.axis3.position())
-        right = apply_deadband(controller.axis2.position())
+        left = apply_deadband(-controller.axis3.position())
+        right = apply_deadband(-controller.axis2.position())
         tank_drive(left, right)
 
         # forklift
@@ -111,7 +111,6 @@ def autonomous():
     return
 
 controller.buttonA.pressed(deploy_servo, (servo_b, SERVO_B_DEPLOYED_POSITION))
-controller.buttonX.pressed(deploy_servo, (servo_b, -SERVO_B_DEPLOYED_POSITION))
 controller.buttonY.pressed(deploy_servo, (servo_b, SERVO_B_INITIAL_POSITION))
 controller.buttonRight.pressed(deploy_servo, (servo_c, SERVO_C_DEPLOYED_POSITION))
 controller.buttonLeft.pressed(deploy_servo, (servo_c, -SERVO_C_DEPLOYED_POSITION))
