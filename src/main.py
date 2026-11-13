@@ -39,11 +39,15 @@ fork_motor.set_stopping(BRAKE)
 
 # Deadband helps prevent the motors from moving when the controller is near its center position.
 DEADBAND = 5
+# Smooths out acceleration. The most the drive power can rise in one pass of
+# the loop (every 20 ms). 5 means 0 to full power in 0.4 seconds.
+# Bigger = snappier, smaller = smoother. CHANGE ME: tune on the robot.
+DRIVE_RAMP_STEP = 5
 # Servos only go from -50 to 50 degrees. Don't set these higher than 50.
-SERVO_BREADBOX_DEPLOYED_POSITION = -45
-SERVO_BREADBOX_INITIAL_POSITION = 45
-SERVO_FRIDGE_DEPLOYED_POSITION = 50
-SERVO_FRIDGE_INITIAL_POSITION = -45
+SERVO_BREADBOX_DEPLOYED_POSITION = 50
+SERVO_BREADBOX_INITIAL_POSITION = -45
+SERVO_FRIDGE_DEPLOYED_POSITION = -45
+SERVO_FRIDGE_INITIAL_POSITION = 50
 FORKLIFT_UP_POWER = 100
 FORKLIFT_DOWN_POWER = -100
 FORKLIFT_UP_POWER_SLOW = 30
@@ -79,6 +83,21 @@ def apply_deadband(value):
         return 0
     return value
 
+def ramp(current, target):
+    # Changing direction: drop to zero first, then speed up the other way.
+    if target * current < 0:
+        current = 0
+    # Slowing down or stopping happens right away, so letting go of the
+    # stick always stops the robot.
+    if abs(target) <= abs(current):
+        return target
+    # Speeding up: move at most DRIVE_RAMP_STEP toward the stick.
+    if target > current + DRIVE_RAMP_STEP:
+        return current + DRIVE_RAMP_STEP
+    if target < current - DRIVE_RAMP_STEP:
+        return current - DRIVE_RAMP_STEP
+    return target
+
 def jitter_fork_percent(jitter_speed):
     set_power(fork_motor,jitter_speed)
     wait(JITTER_TIME_MSEC, MSEC)
@@ -92,11 +111,18 @@ def driver_control():
     deploy_servo(servo_b, SERVO_FRIDGE_INITIAL_POSITION)
     deploy_servo(servo_c, SERVO_BREADBOX_INITIAL_POSITION)
 
+    # The power each drive side was given last time round the loop, so ramp()
+    # knows where it is starting from.
+    left_power = 0
+    right_power = 0
+
     while True:
         #drive
         left = apply_deadband(controller.axis3.position())
         right = apply_deadband(controller.axis2.position())
-        tank_drive(left, right)
+        left_power = ramp(left_power, left)
+        right_power = ramp(right_power, right)
+        tank_drive(left_power, right_power)
 
         # forklift
         if controller.buttonR1.pressing():
