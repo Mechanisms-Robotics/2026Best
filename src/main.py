@@ -52,7 +52,7 @@ FORKLIFT_DOWN_POWER_SLOW = -20
 # too weak and too short to move the geared motor. CHANGE ME: these are
 # starting guesses; tune them on the robot.
 JITTER_SPEED_UP = 80
-JITTER_SPEED_DOWN = -80
+JITTER_SPEED_DOWN = -65  # weaker than up: gravity helps the fork down
 JITTER_TIME_MSEC = 40
 # Pause after each pulse so the fork settles before the next one. Without it
 # the down pulse starts while the fork is still moving up, and the fork
