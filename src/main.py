@@ -28,8 +28,8 @@ controller = Controller()
 # Drive motors. Each one goes through an MC55, so it's a Motor55.
 # If one side drives backwards, flip its True/False.
 
-servo_b = Servo(brain.three_wire_port.b)
-servo_c = Servo(brain.three_wire_port.c)
+servo_b = Servo(brain.three_wire_port.b)  # fridge
+servo_c = Servo(brain.three_wire_port.c)  # bread box
 left_motor = Motor55(Ports.PORT1, True)
 right_motor = Motor55(Ports.PORT2, False)
 fork_motor = Motor55(Ports.PORT3, True)
@@ -48,7 +48,7 @@ FORKLIFT_UP_POWER = 100
 FORKLIFT_DOWN_POWER = -100
 FORKLIFT_UP_POWER_SLOW = 30
 FORKLIFT_DOWN_POWER_SLOW = -20
-# Jitter (D-pad Down): a quick up-then-down shake of the fork. 5% for 20 ms was
+# Jitter (L2): a quick up-then-down shake of the fork. 5% for 20 ms was
 # too weak and too short to move the geared motor. CHANGE ME: these are
 # starting guesses; tune them on the robot.
 JITTER_SPEED_UP = 80
@@ -89,8 +89,8 @@ def driver_control():
     # A servo goes limp until it is given a position, so send both to their
     # starting positions once, before the loop. They move here as soon as the
     # program starts.
-    deploy_servo(servo_b, SERVO_BREADBOX_INITIAL_POSITION)
-    deploy_servo(servo_c, SERVO_FRIDGE_INITIAL_POSITION)
+    deploy_servo(servo_b, SERVO_FRIDGE_INITIAL_POSITION)
+    deploy_servo(servo_c, SERVO_BREADBOX_INITIAL_POSITION)
 
     while True:
         #drive
@@ -103,15 +103,16 @@ def driver_control():
             set_power(fork_motor, FORKLIFT_UP_POWER)
         elif controller.buttonR2.pressing():
             set_power(fork_motor, FORKLIFT_DOWN_POWER)
-        elif controller.buttonL1.pressing():
+        elif controller.buttonUp.pressing():
             set_power(fork_motor, FORKLIFT_UP_POWER_SLOW)
-        elif controller.buttonL2.pressing():
+        elif controller.buttonDown.pressing():
             set_power(fork_motor, FORKLIFT_DOWN_POWER_SLOW)
         else:
             # stop() (not 0% power) so the BRAKE stopping mode kicks in.
             fork_motor.stop()
 
-        if controller.buttonDown.pressing():
+        # jitter
+        if controller.buttonL2.pressing():
                 jitter_fork_percent(JITTER_SPEED_UP)
                 jitter_fork_percent(JITTER_SPEED_DOWN)
         
@@ -120,9 +121,9 @@ def driver_control():
 def autonomous():
     return
 
-controller.buttonA.pressed(deploy_servo, (servo_b, SERVO_BREADBOX_DEPLOYED_POSITION))
-controller.buttonY.pressed(deploy_servo, (servo_b, SERVO_BREADBOX_INITIAL_POSITION))
-controller.buttonB.pressed(deploy_servo, (servo_c, SERVO_FRIDGE_DEPLOYED_POSITION))
-controller.buttonX.pressed(deploy_servo, (servo_c, SERVO_FRIDGE_INITIAL_POSITION))
+controller.buttonA.pressed(deploy_servo, (servo_b, SERVO_FRIDGE_DEPLOYED_POSITION))
+controller.buttonY.pressed(deploy_servo, (servo_b, SERVO_FRIDGE_INITIAL_POSITION))
+controller.buttonB.pressed(deploy_servo, (servo_c, SERVO_BREADBOX_DEPLOYED_POSITION))
+controller.buttonX.pressed(deploy_servo, (servo_c, SERVO_BREADBOX_INITIAL_POSITION))
 
 competition = Competition(driver_control, autonomous)
