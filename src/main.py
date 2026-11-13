@@ -2,74 +2,154 @@
 #                                                                              #
 #   Module:       main.py                                                      #
 #   Author:       Mechanisms Robotics                                          #
-#   Description:  2026 BEST robot - VEX V5 Python starter                      #
+#   Description:  2026 BEST robot (Byte to Bite) - VEX V5 Python               #
+#                                                                              #
+#   This is the program that gets downloaded to the brain.                     #
+#                                                                              #
+#   This is our tank drive program                                      #
+#                                                                              #
+#   examples/example.py has a working example of every building block (motors, #
+#   sensors, driving, autonomous). Copy what you need from there into this     #
+#   file. You can't import it: only this one file is downloaded to the brain.  #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
-
 from vex import *
 
 # ---------------------------------------------------------------------------- #
 # Devices
-# Change the port numbers to match how your robot is wired. If a side of the
-# drivetrain drives backward, flip the True/False (reversed) on those motors.
+#
+# Declare every motor and sensor here, once you know which port it is plugged
+# into. See the Devices section of examples/example.py for how each one is
+# written.
 # ---------------------------------------------------------------------------- #
 brain = Brain()
 controller = Controller()
 
-left_front = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
-left_back = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
-right_front = Motor(Ports.PORT9, GearSetting.RATIO_18_1, True)
-right_back = Motor(Ports.PORT10, GearSetting.RATIO_18_1, True)
+# Drive motors. Each one goes through an MC55, so it's a Motor55.
+# If one side drives backwards, flip its True/False.
 
-left_drive = MotorGroup(left_front, left_back)
-right_drive = MotorGroup(right_front, right_back)
+servo_b = Servo(brain.three_wire_port.b)  # fridge
+servo_c = Servo(brain.three_wire_port.c)  # bread box
+left_motor = Motor55(Ports.PORT1, True)
+right_motor = Motor55(Ports.PORT2, False)
+fork_motor = Motor55(Ports.PORT3, True)
+# BRAKE, not HOLD: an MC55 can't measure position, so it can only COAST or
+# BRAKE. Brake mode only takes effect when fork_motor.stop() is called.
+fork_motor.set_stopping(BRAKE)
 
-# Joystick values smaller than this (in percent) are treated as zero so the
-# robot doesn't creep when the sticks are centered.
+# Deadband helps prevent the motors from moving when the controller is near its center position.
 DEADBAND = 5
+# Smooths out acceleration. The most the drive power can rise in one pass of
+# the loop (every 20 ms). 5 means 0 to full power in 0.4 seconds.
+# Bigger = snappier, smaller = smoother. CHANGE ME: tune on the robot.
+DRIVE_RAMP_STEP = 5
+# Servos only go from -50 to 50 degrees. Don't set these higher than 50.
+SERVO_BREADBOX_DEPLOYED_POSITION = 50
+SERVO_BREADBOX_INITIAL_POSITION = -45
+SERVO_FRIDGE_DEPLOYED_POSITION = -45
+SERVO_FRIDGE_INITIAL_POSITION = 50
+FORKLIFT_UP_POWER = 100
+FORKLIFT_DOWN_POWER = -100
+FORKLIFT_UP_POWER_SLOW = 30
+FORKLIFT_DOWN_POWER_SLOW = -20
+# Jitter (L2): a quick up-then-down shake of the fork. 5% for 20 ms was
+# too weak and too short to move the geared motor. CHANGE ME: these are
+# starting guesses; tune them on the robot.
+JITTER_SPEED_UP = 80
+JITTER_SPEED_DOWN = -65  # weaker than up: gravity helps the fork down
+JITTER_TIME_MSEC = 40
+# Pause after each pulse so the fork settles before the next one. Without it
+# the down pulse starts while the fork is still moving up, and the fork
+# creeps upward. CHANGE ME: tune on the robot.
+JITTER_PAUSE_MSEC = 20
 
+def set_power(motor, percent):
+    if percent > 100:
+        percent = 100
+    if percent < -100:
+        percent = -100
+    max_volts = motor.get_max_voltage() / 1000
+    motor.spin(FORWARD, max_volts * percent / 100, VOLT)
+
+def deploy_servo(servo_motor, position):
+    servo_motor.set_position(position, DEGREES)
+
+def tank_drive(left, right):
+    set_power(left_motor, left)
+    set_power(right_motor, right)
 
 def apply_deadband(value):
     if abs(value) < DEADBAND:
         return 0
     return value
 
+def ramp(current, target):
+    # Changing direction: drop to zero first, then speed up the other way.
+    if target * current < 0:
+        current = 0
+    # Slowing down or stopping happens right away, so letting go of the
+    # stick always stops the robot.
+    if abs(target) <= abs(current):
+        return target
+    # Speeding up: move at most DRIVE_RAMP_STEP toward the stick.
+    if target > current + DRIVE_RAMP_STEP:
+        return current + DRIVE_RAMP_STEP
+    if target < current - DRIVE_RAMP_STEP:
+        return current - DRIVE_RAMP_STEP
+    return target
 
-# ---------------------------------------------------------------------------- #
-# Autonomous - runs once when the field starts the autonomous period.
-# ---------------------------------------------------------------------------- #
-def autonomous():
-    brain.screen.clear_screen()
-    brain.screen.print("Autonomous")
-
-    # Example: drive forward for one second, then stop.
-    left_drive.spin(FORWARD, 50, PERCENT)
-    right_drive.spin(FORWARD, 50, PERCENT)
-    wait(1, SECONDS)
-    left_drive.stop()
-    right_drive.stop()
-
-
-# ---------------------------------------------------------------------------- #
-# Driver control - arcade drive.
-# Left stick up/down (axis 3) = forward/back, right stick left/right (axis 1) = turn.
-# ---------------------------------------------------------------------------- #
+def jitter_fork_percent(jitter_speed):
+    set_power(fork_motor,jitter_speed)
+    wait(JITTER_TIME_MSEC, MSEC)
+    fork_motor.stop()
+    wait(JITTER_PAUSE_MSEC, MSEC)
+    
 def driver_control():
-    brain.screen.clear_screen()
-    brain.screen.print("Driver control")
+    # A servo goes limp until it is given a position, so send both to their
+    # starting positions once, before the loop. They move here as soon as the
+    # program starts.
+    deploy_servo(servo_b, SERVO_FRIDGE_INITIAL_POSITION)
+    deploy_servo(servo_c, SERVO_BREADBOX_INITIAL_POSITION)
+
+    # The power each drive side was given last time round the loop, so ramp()
+    # knows where it is starting from.
+    left_power = 0
+    right_power = 0
 
     while True:
-        forward = apply_deadband(controller.axis3.position())
-        turn = apply_deadband(controller.axis1.position())
+        #drive
+        left = apply_deadband(controller.axis3.position())
+        right = apply_deadband(controller.axis2.position())
+        left_power = ramp(left_power, left)
+        right_power = ramp(right_power, right)
+        tank_drive(left_power, right_power)
 
-        left_drive.spin(FORWARD, forward + turn, PERCENT)
-        right_drive.spin(FORWARD, forward - turn, PERCENT)
+        # forklift
+        if controller.buttonR1.pressing():
+            set_power(fork_motor, FORKLIFT_UP_POWER)
+        elif controller.buttonR2.pressing():
+            set_power(fork_motor, FORKLIFT_DOWN_POWER)
+        elif controller.buttonUp.pressing():
+            set_power(fork_motor, FORKLIFT_UP_POWER_SLOW)
+        elif controller.buttonDown.pressing():
+            set_power(fork_motor, FORKLIFT_DOWN_POWER_SLOW)
+        else:
+            # stop() (not 0% power) so the BRAKE stopping mode kicks in.
+            fork_motor.stop()
 
-        # Give the brain time for other tasks. Every loop should wait a little.
+        # jitter
+        if controller.buttonL2.pressing():
+                jitter_fork_percent(JITTER_SPEED_UP)
+                jitter_fork_percent(JITTER_SPEED_DOWN)
+        
         wait(20, MSEC)
 
+def autonomous():
+    return
 
-# The Competition object calls autonomous() and driver_control() when the field
-# control system says to. With no field control plugged in, running the program
-# goes straight to driver_control().
+controller.buttonA.pressed(deploy_servo, (servo_b, SERVO_FRIDGE_DEPLOYED_POSITION))
+controller.buttonY.pressed(deploy_servo, (servo_b, SERVO_FRIDGE_INITIAL_POSITION))
+controller.buttonB.pressed(deploy_servo, (servo_c, SERVO_BREADBOX_DEPLOYED_POSITION))
+controller.buttonX.pressed(deploy_servo, (servo_c, SERVO_BREADBOX_INITIAL_POSITION))
+
 competition = Competition(driver_control, autonomous)

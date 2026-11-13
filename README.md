@@ -17,23 +17,44 @@ Mechanisms Robotics robot code for the 2026 BEST season. The robot uses a VEX V5
 2. Click the **Download** button in the VEX toolbar at the bottom of VS Code.
 3. The program appears in slot 1 on the brain. Run it from the brain screen or the controller.
 
+## Robot controls
+
+These match `src/main.py`. If you change a button in the code, change this table too.
+
+| Controller input | What it does |
+| ---------------- | ------------ |
+| Left stick up/down | Left side of the drive (tank drive) |
+| Right stick up/down | Right side of the drive |
+| R1 / R2 (hold) | Forklift up / down, full power |
+| D-pad Up / Down (hold) | Forklift up / down, slow |
+| L2 (hold) | Jitter: shakes the forklift up and down |
+| A / Y | Fridge servo (3-wire port B): open / back to start |
+| B / X | Bread box servo (3-wire port C): open / back to start |
+
+When the program starts, both servos move straight to their starting positions. Keep hands clear of the fridge and bread box when you start it.
+
 ## Project layout
 
 ```
 src/main.py                       <- all robot code lives here
+examples/example.py               <- working examples to copy from (not downloaded)
 .vscode/vex_project_settings.json <- tells the VEX extension this is a V5 Python project
+docs/fiducial-map.md              <- where each fiducial is on the field, and its ID
 ```
 
 Everything has to be in `src/main.py`. VEX Python downloads one file, so you can't split code across files the way you do in WPILib. Classes and functions inside the one file work fine.
+
+`src/main.py` starts out nearly empty. `examples/example.py` has a working example of each building block: motors, sensors, driving and autonomous. Copy the parts you need into `src/main.py`. It is never downloaded to the brain and can't be imported.
 
 ## Coming from FRC Java
 
 - **Indentation matters.** Python uses indentation instead of `{ }` to mark blocks.
 - **No compiler.** Type mistakes only show up when the code runs, so watch for red squiggles in VS Code before you download.
 - **It's MicroPython.** The brain runs a small version of Python, so most of the standard library isn't available and you can't `pip install` anything.
-- **No command-based framework.** The code is plain functions: `autonomous()` runs during the autonomous period, and `driver_control()` runs a loop during driver control.
+- **No command-based framework.** The code is plain functions. `driver_control()` runs a loop for the whole match. There is no autonomous period in this year's game: the driver presses a button and the robot runs a routine on its own (see the "Autonomous building blocks" section of `examples/example.py`).
 - **Docs:** [VEX V5 Python API](https://api.vex.com/v5/home/python/index.html)
+- **Field:** [`docs/fiducial-map.md`](docs/fiducial-map.md) shows where each fiducial (AprilTag) is in the Dining Room and its ID number.
 
 ## Autocomplete not working?
 
-The VEX extension adds `python.analysis.stubPath` to `.vscode/settings.json` on each machine, and that path is specific to your computer. **Don't commit that line.** If autocomplete for `vex` stops working, reopen the folder so the extension can set the path again.
+The VEX extension adds `python.analysis.stubPath` to `.vscode/settings.json` on each machine, and that full path is specific to your computer. Run `tools/check.sh` once after cloning: it sets Git up to commit a relative path (`build/vex-sdk/...`) in its place, so you can commit the file like any other. If autocomplete for `vex` stops working, reopen the folder so the extension can set the path again.
