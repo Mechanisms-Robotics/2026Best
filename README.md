@@ -17,6 +17,22 @@ Mechanisms Robotics robot code for the 2026 BEST season. The robot uses a VEX V5
 2. Click the **Download** button in the VEX toolbar at the bottom of VS Code.
 3. The program appears in slot 1 on the brain. Run it from the brain screen or the controller.
 
+## Robot controls
+
+These match `src/main.py`. If you change a button in the code, change this table too.
+
+| Controller input | What it does |
+| ---------------- | ------------ |
+| Left stick up/down | Left side of the drive (tank drive) |
+| Right stick up/down | Right side of the drive |
+| R1 / R2 (hold) | Forklift up / down, full power |
+| D-pad Up / Down (hold) | Forklift up / down, slow |
+| L2 (hold) | Jitter: shakes the forklift up and down |
+| A / Y | Fridge servo (3-wire port B): open / back to start |
+| B / X | Bread box servo (3-wire port C): open / back to start |
+
+When the program starts, both servos move straight to their starting positions. Keep hands clear of the fridge and bread box when you start it.
+
 ## Project layout
 
 ```

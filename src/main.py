@@ -28,28 +28,40 @@ controller = Controller()
 # Drive motors. Each one goes through an MC55, so it's a Motor55.
 # If one side drives backwards, flip its True/False.
 
-servo_a = Servo(brain.three_wire_port.a)
-servo_b = Servo(brain.three_wire_port.b)
-servo_c = Servo(brain.three_wire_port.c)
-left_motor = Motor55(Ports.PORT1, False)
-right_motor = Motor55(Ports.PORT2, True)
+servo_b = Servo(brain.three_wire_port.b)  # fridge
+servo_c = Servo(brain.three_wire_port.c)  # bread box
+left_motor = Motor55(Ports.PORT1, True)
+right_motor = Motor55(Ports.PORT2, False)
 fork_motor = Motor55(Ports.PORT3, True)
-fork_motor.set_stopping(HOLD)
-elapsed_time = Timer()
+# BRAKE, not HOLD: an MC55 can't measure position, so it can only COAST or
+# BRAKE. Brake mode only takes effect when fork_motor.stop() is called.
+fork_motor.set_stopping(BRAKE)
 
 # Deadband helps prevent the motors from moving when the controller is near its center position.
 DEADBAND = 5
-SERVO_A_DEPLOYED_POSITION = 70
-SERVO_A_INITIAL_POSITION = 0
-SERVO_B_DEPLOYED_POSITION = 70
-SERVO_B_INITIAL_POSITION = 0
+# Smooths out acceleration. The most the drive power can rise in one pass of
+# the loop (every 20 ms). 5 means 0 to full power in 0.4 seconds.
+# Bigger = snappier, smaller = smoother. CHANGE ME: tune on the robot.
+DRIVE_RAMP_STEP = 5
+# Servos only go from -50 to 50 degrees. Don't set these higher than 50.
+SERVO_BREADBOX_DEPLOYED_POSITION = 50
+SERVO_BREADBOX_INITIAL_POSITION = -45
+SERVO_FRIDGE_DEPLOYED_POSITION = -45
+SERVO_FRIDGE_INITIAL_POSITION = 50
 FORKLIFT_UP_POWER = 100
 FORKLIFT_DOWN_POWER = -100
 FORKLIFT_UP_POWER_SLOW = 30
 FORKLIFT_DOWN_POWER_SLOW = -20
-FORKLIFT_HOLD_POWER = 0
-JITTER_SPEED_UP = 5
-JITTER_SPEED_DOWN = -5
+# Jitter (L2): a quick up-then-down shake of the fork. 5% for 20 ms was
+# too weak and too short to move the geared motor. CHANGE ME: these are
+# starting guesses; tune them on the robot.
+JITTER_SPEED_UP = 80
+JITTER_SPEED_DOWN = -65  # weaker than up: gravity helps the fork down
+JITTER_TIME_MSEC = 40
+# Pause after each pulse so the fork settles before the next one. Without it
+# the down pulse starts while the fork is still moving up, and the fork
+# creeps upward. CHANGE ME: tune on the robot.
+JITTER_PAUSE_MSEC = 20
 
 def set_power(motor, percent):
     if percent > 100:
@@ -71,31 +83,62 @@ def apply_deadband(value):
         return 0
     return value
 
+def ramp(current, target):
+    # Changing direction: drop to zero first, then speed up the other way.
+    if target * current < 0:
+        current = 0
+    # Slowing down or stopping happens right away, so letting go of the
+    # stick always stops the robot.
+    if abs(target) <= abs(current):
+        return target
+    # Speeding up: move at most DRIVE_RAMP_STEP toward the stick.
+    if target > current + DRIVE_RAMP_STEP:
+        return current + DRIVE_RAMP_STEP
+    if target < current - DRIVE_RAMP_STEP:
+        return current - DRIVE_RAMP_STEP
+    return target
+
 def jitter_fork_percent(jitter_speed):
     set_power(fork_motor,jitter_speed)
-    wait(20, MSEC)
+    wait(JITTER_TIME_MSEC, MSEC)
     fork_motor.stop()
+    wait(JITTER_PAUSE_MSEC, MSEC)
     
 def driver_control():
+    # A servo goes limp until it is given a position, so send both to their
+    # starting positions once, before the loop. They move here as soon as the
+    # program starts.
+    deploy_servo(servo_b, SERVO_FRIDGE_INITIAL_POSITION)
+    deploy_servo(servo_c, SERVO_BREADBOX_INITIAL_POSITION)
+
+    # The power each drive side was given last time round the loop, so ramp()
+    # knows where it is starting from.
+    left_power = 0
+    right_power = 0
+
     while True:
         #drive
         left = apply_deadband(controller.axis3.position())
         right = apply_deadband(controller.axis2.position())
-        tank_drive(left, right)
+        left_power = ramp(left_power, left)
+        right_power = ramp(right_power, right)
+        tank_drive(left_power, right_power)
 
         # forklift
         if controller.buttonR1.pressing():
             set_power(fork_motor, FORKLIFT_UP_POWER)
         elif controller.buttonR2.pressing():
             set_power(fork_motor, FORKLIFT_DOWN_POWER)
-        elif controller.buttonL1.pressing():
+        elif controller.buttonUp.pressing():
             set_power(fork_motor, FORKLIFT_UP_POWER_SLOW)
-        elif controller.buttonL2.pressing():
+        elif controller.buttonDown.pressing():
             set_power(fork_motor, FORKLIFT_DOWN_POWER_SLOW)
         else:
-            set_power(fork_motor, FORKLIFT_HOLD_POWER)
+            # stop() (not 0% power) so the BRAKE stopping mode kicks in.
+            fork_motor.stop()
 
-        if controller.buttonB.pressing():
+        # jitter
+        if controller.buttonL2.pressing():
                 jitter_fork_percent(JITTER_SPEED_UP)
                 jitter_fork_percent(JITTER_SPEED_DOWN)
         
@@ -104,11 +147,9 @@ def driver_control():
 def autonomous():
     return
 
-controller.buttonA.pressed(deploy_servo, (servo_a, SERVO_A_DEPLOYED_POSITION))
-controller.buttonX.pressed(deploy_servo, (servo_a, -SERVO_A_DEPLOYED_POSITION))
-controller.buttonY.pressed(deploy_servo, (servo_a, SERVO_A_INITIAL_POSITION))
-controller.buttonRight.pressed(deploy_servo, (servo_b, SERVO_B_DEPLOYED_POSITION))
-controller.buttonLeft.pressed(deploy_servo, (servo_b, -SERVO_B_DEPLOYED_POSITION))
-controller.buttonUp.pressed(deploy_servo, (servo_b, SERVO_B_INITIAL_POSITION))
+controller.buttonA.pressed(deploy_servo, (servo_b, SERVO_FRIDGE_DEPLOYED_POSITION))
+controller.buttonY.pressed(deploy_servo, (servo_b, SERVO_FRIDGE_INITIAL_POSITION))
+controller.buttonB.pressed(deploy_servo, (servo_c, SERVO_BREADBOX_DEPLOYED_POSITION))
+controller.buttonX.pressed(deploy_servo, (servo_c, SERVO_BREADBOX_INITIAL_POSITION))
 
 competition = Competition(driver_control, autonomous)
