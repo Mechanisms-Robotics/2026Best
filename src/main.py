@@ -30,21 +30,22 @@ controller = Controller()
 
 servo_b = Servo(brain.three_wire_port.b)
 servo_c = Servo(brain.three_wire_port.c)
-left_motor = Motor55(Ports.PORT1, False)
-right_motor = Motor55(Ports.PORT2, True)
+left_motor = Motor55(Ports.PORT1, True)
+right_motor = Motor55(Ports.PORT2, False)
 fork_motor = Motor55(Ports.PORT3, True)
 # BRAKE, not HOLD: an MC55 can't measure position, so it can only COAST or
 # BRAKE. Brake mode only takes effect when fork_motor.stop() is called.
 fork_motor.set_stopping(BRAKE)
-elapsed_time = Timer()
 
 # Deadband helps prevent the motors from moving when the controller is near its center position.
 DEADBAND = 5
 # Servos only go from -50 to 50 degrees. Don't set these higher than 50.
-SERVO_B_DEPLOYED_POSITION = 50
-SERVO_B_INITIAL_POSITION = -40
+# B is for Bread Box
+SERVO_B_DEPLOYED_POSITION = -45
+SERVO_B_INITIAL_POSITION = 45
+# C is for Fridge
 SERVO_C_DEPLOYED_POSITION = 50
-SERVO_C_INITIAL_POSITION = -40
+SERVO_C_INITIAL_POSITION = -45
 FORKLIFT_UP_POWER = 100
 FORKLIFT_DOWN_POWER = -100
 FORKLIFT_UP_POWER_SLOW = 30
@@ -54,7 +55,7 @@ FORKLIFT_DOWN_POWER_SLOW = -20
 # starting guesses; tune them on the robot.
 JITTER_SPEED_UP = 40
 JITTER_SPEED_DOWN = -40
-JITTER_TIME_MSEC = 80
+JITTER_TIME_MSEC = 40
 
 def set_power(motor, percent):
     if percent > 100:
@@ -82,10 +83,16 @@ def jitter_fork_percent(jitter_speed):
     fork_motor.stop()
     
 def driver_control():
+    # A servo goes limp until it is given a position, so send both to their
+    # starting positions once, before the loop. They move here as soon as the
+    # program starts.
+    deploy_servo(servo_b, SERVO_B_INITIAL_POSITION)
+    deploy_servo(servo_c, SERVO_C_INITIAL_POSITION)
+
     while True:
         #drive
-        left = apply_deadband(-controller.axis3.position())
-        right = apply_deadband(-controller.axis2.position())
+        left = apply_deadband(controller.axis3.position())
+        right = apply_deadband(controller.axis2.position())
         tank_drive(left, right)
 
         # forklift
@@ -113,7 +120,6 @@ def autonomous():
 controller.buttonA.pressed(deploy_servo, (servo_b, SERVO_B_DEPLOYED_POSITION))
 controller.buttonY.pressed(deploy_servo, (servo_b, SERVO_B_INITIAL_POSITION))
 controller.buttonRight.pressed(deploy_servo, (servo_c, SERVO_C_DEPLOYED_POSITION))
-controller.buttonLeft.pressed(deploy_servo, (servo_c, -SERVO_C_DEPLOYED_POSITION))
-controller.buttonUp.pressed(deploy_servo, (servo_c, SERVO_C_INITIAL_POSITION))
+controller.buttonLeft.pressed(deploy_servo, (servo_c, SERVO_C_INITIAL_POSITION))
 
 competition = Competition(driver_control, autonomous)
